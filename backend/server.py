@@ -4668,6 +4668,28 @@ def seed_options_log_from_snapshots():
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
+def seed_demo_data():
+    """Copy demo dataset into the live data directory on first boot."""
+    demo_dir = BACKEND_DIR / "demo_data"
+    if not demo_dir.exists():
+        print("  No demo_data/ directory found, starting empty.")
+        return
+    print("  Seeding demo data into data directory...")
+    for fname in demo_dir.glob("*.json"):
+        key = fname.stem
+        if key in store:
+            with open(fname) as f:
+                store[key] = json.load(f)
+    # Also copy supplementary files
+    for fname in ["watchlist.json", "cash_flow.json", "sales.json", "box_purchases.json"]:
+        src = demo_dir / fname
+        if src.exists():
+            import shutil
+            shutil.copy2(src, DATA_DIR / fname)
+    save_store()
+    print(f"  Demo data loaded: {len(store['equities'])} equities, {len(store['options'])} options, {len(store['crypto'])} crypto")
+
+
 def main():
     # Load data
     json_exists = (DATA_DIR / "equities.json").exists()
@@ -4676,6 +4698,9 @@ def main():
         load_store()
     else:
         load_from_excel()
+        # If Excel import didn't populate anything, seed from demo data
+        if not store["equities"]:
+            seed_demo_data()
 
     # One-time migration: backfill cash_balance on historical snapshots
     snapshots = load_snapshots()
