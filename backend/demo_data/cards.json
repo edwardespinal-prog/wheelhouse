@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "item_type": "card",
+    "category": "Baseball",
+    "player": "Mike Trout",
+    "year": 2023,
+    "brand": "Topps Chrome",
+    "card_name": "Mike Trout Base",
+    "serial": "",
+    "condition": "PSA 9",
+    "grade": "PSA 9",
+    "grader": "PSA",
+    "est_value": 85.00,
+    "status": "collection"
+  },
+  {
+    "id": 2,
+    "item_type": "card",
+    "category": "Basketball",
+    "player": "Jaylen Brown",
+    "year": 2024,
+    "brand": "Prizm",
+    "card_name": "Jaylen Brown RPA",
+    "serial": "/99",
+    "condition": "Raw",
+    "est_value": 145.00,
+    "status": "inventory",
+    "listed_price": 145.00,
+    "platform": "eBay"
+  },
+  {
+    "id": 3,
+    "item_type": "sneaker",
+    "brand": "Jordan",
+    "model": "1 Retro OG Chicago",
+    "colorway": "White/Black-Varsity Red",
+    "size": "10",
+    "est_value": 285.00,
+    "status": "inventory"
+  }
+]

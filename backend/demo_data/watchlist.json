@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "ticker": "AMD",
+    "target_price": 180.00,
+    "notes": "AI GPU play, watching for breakout above $165",
+    "date_added": "2025-01-15"
+  },
+  {
+    "id": 2,
+    "ticker": "PLTR",
+    "target_price": 28.00,
+    "notes": "Government AI contracts catalyst",
+    "date_added": "2025-02-01"
+  },
+  {
+    "id": 3,
+    "ticker": "COIN",
+    "target_price": 220.00,
+    "notes": "Crypto cycle play, correlates with BTC",
+    "date_added": "2025-03-10"
+  }
+]

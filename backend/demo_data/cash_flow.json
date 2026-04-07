@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "date": "2024-09-01",
+    "type": "deposit",
+    "amount": 5000.00,
+    "notes": "Initial deposit"
+  },
+  {
+    "id": 2,
+    "date": "2024-11-15",
+    "type": "deposit",
+    "amount": 2500.00,
+    "notes": "Monthly contribution"
+  },
+  {
+    "id": 3,
+    "date": "2025-01-10",
+    "type": "deposit",
+    "amount": 1000.00,
+    "notes": "Monthly contribution"
+  },
+  {
+    "id": 4,
+    "date": "2025-03-20",
+    "type": "withdrawal",
+    "amount": 500.00,
+    "notes": "Emergency fund"
+  },
+  {
+    "id": 5,
+    "date": "2025-04-01",
+    "type": "deposit",
+    "amount": 1000.00,
+    "notes": "Monthly contribution"
+  }
+]

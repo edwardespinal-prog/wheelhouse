@@ -1,0 +1,48 @@
+[
+  {
+    "id": 1,
+    "position_name": "AAPL Jun 2025 $200C (debit spread)",
+    "occ_long": "AAPL250620C00200000",
+    "occ_short": "",
+    "contracts": 2,
+    "avg_cost": 1.60,
+    "total_invested": 320.00,
+    "live_price_long": 1.60,
+    "live_price_short": 0,
+    "net_spread": 1.60,
+    "total_value": 320.00,
+    "pl_dollar": 0,
+    "is_cc": false
+  },
+  {
+    "id": 2,
+    "position_name": "SOFI Apr 2025 $12C (covered call)",
+    "occ_long": "",
+    "occ_short": "SOFI250417C00012000",
+    "contracts": 2,
+    "avg_cost": 0.42,
+    "total_invested": -84.00,
+    "live_price_long": 0,
+    "live_price_short": 0.42,
+    "net_spread": -0.42,
+    "total_value": -84.00,
+    "pl_dollar": 0,
+    "is_cc": true,
+    "cc_ticker": "SOFI"
+  },
+  {
+    "id": 3,
+    "position_name": "NVDA Mar 2025 $550P (CSP)",
+    "occ_long": "",
+    "occ_short": "NVDA250321P00550000",
+    "contracts": 1,
+    "avg_cost": 4.25,
+    "total_invested": -425.00,
+    "live_price_long": 0,
+    "live_price_short": 4.25,
+    "net_spread": -4.25,
+    "total_value": -425.00,
+    "pl_dollar": 0,
+    "is_cc": false
+  }
+]

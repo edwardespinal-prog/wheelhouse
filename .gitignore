@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+backend/data/*.json
+backend/data/*.log
+!backend/data/.gitkeep
+!backend/data/README.md
+.DS_Store
+.env
+*.xlsx
+node_modules/

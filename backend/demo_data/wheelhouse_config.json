@@ -1,0 +1,25 @@
+{
+  "site_name": "WheelHouse",
+  "tagline": "Your personal portfolio command center",
+  "creator": "Ed Espinal",
+  "creator_url": "https://github.com/edwardespinal-prog",
+  "tabs": {
+    "dashboard": true,
+    "equities": true,
+    "options": true,
+    "watchlist": true,
+    "tax_ledger": true,
+    "cc_income": true,
+    "crypto": true,
+    "news": true,
+    "dark_pool_insiders": true,
+    "wheelers_paradise": true,
+    "uncle_eddies": true
+  },
+  "features": {
+    "eth_institutional_intelligence": true,
+    "portfolio_risk_dashboard": true,
+    "cash_flow_tracker": true,
+    "benchmark_comparison": true
+  }
+}

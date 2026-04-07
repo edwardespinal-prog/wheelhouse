@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: wheelhouse
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: python backend/server.py
+    plan: starter
+    envVars:
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: PYTHON_VERSION
+        value: 3.11.6
+    disk:
+      name: wheelhouse-data
+      mountPath: /data
+      sizeGB: 1

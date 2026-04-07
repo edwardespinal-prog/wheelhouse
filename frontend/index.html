@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ed's Financial Command Center</title>
+    <title>WheelHouse</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -21,8 +21,8 @@
             --text-primary: #f0f0f0;
             --text-muted: #a0aec0;
             --border: #1c2a5a;
-            --knicks-orange: #F15A22;
-            --knicks-blue: #003DA5;
+            --theme-accent: #F15A22;
+            --theme-secondary: #003DA5;
         }
 
         * {
@@ -56,7 +56,7 @@
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-left: 3px solid var(--knicks-orange);
+            border-left: 3px solid var(--theme-accent);
             border-radius: 8px;
             padding: 16px;
             text-align: center;
@@ -104,12 +104,12 @@
         }
 
         .tab-button.active {
-            color: var(--knicks-orange);
-            border-bottom-color: var(--knicks-orange);
+            color: var(--theme-accent);
+            border-bottom-color: var(--theme-accent);
         }
 
         .tab-button:hover {
-            color: var(--knicks-orange);
+            color: var(--theme-accent);
         }
 
         .table-container {
@@ -283,7 +283,7 @@
             width: 20px;
             height: 20px;
             border: 2px solid rgba(241, 90, 34, 0.3);
-            border-top-color: var(--knicks-orange);
+            border-top-color: var(--theme-accent);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -338,7 +338,7 @@
 
         .badge-open {
             background: rgba(241, 90, 34, 0.2);
-            color: var(--knicks-orange);
+            color: var(--theme-accent);
         }
 
         .badge-closed {
@@ -363,8 +363,8 @@
         }
 
         .action-button:hover {
-            border-color: var(--knicks-orange);
-            color: var(--knicks-orange);
+            border-color: var(--theme-accent);
+            color: var(--theme-accent);
         }
 
         .action-button.delete:hover {
@@ -381,7 +381,7 @@
             justify-content: center;
             font-size: 14px;
             font-weight: bold;
-            color: var(--knicks-orange);
+            color: var(--theme-accent);
             margin: 20px auto;
         }
 
@@ -441,7 +441,7 @@
         .card-item-value {
             font-size: 18px;
             font-weight: 700;
-            color: var(--knicks-orange);
+            color: var(--theme-accent);
             margin: 12px 0;
             font-family: 'Oswald', sans-serif;
         }
@@ -461,7 +461,7 @@
 
         .movers-section h3 {
             font-size: 14px;
-            color: var(--knicks-orange);
+            color: var(--theme-accent);
             margin-bottom: 12px;
             font-weight: 600;
             font-family: 'Oswald', sans-serif;
@@ -471,7 +471,7 @@
         .mover-item {
             padding: 12px;
             background: rgba(241, 90, 34, 0.06);
-            border-left: 3px solid var(--knicks-orange);
+            border-left: 3px solid var(--theme-accent);
             border-radius: 2px;
             margin-bottom: 8px;
             display: flex;
@@ -508,7 +508,7 @@
         .header-title {
             font-size: 30px;
             font-weight: 700;
-            color: var(--knicks-orange);
+            color: var(--theme-accent);
             font-family: 'Oswald', sans-serif;
             text-transform: uppercase;
             letter-spacing: 1.5px;
@@ -540,13 +540,13 @@
 
         .year-button.active {
             background: var(--accent);
-            border-color: var(--knicks-orange);
+            border-color: var(--theme-accent);
             color: #fff;
         }
 
         .year-button:hover {
-            border-color: var(--knicks-orange);
-            color: var(--knicks-orange);
+            border-color: var(--theme-accent);
+            color: var(--theme-accent);
         }
 
         .toggle-switch {
@@ -585,7 +585,7 @@
 
         .search-box:focus {
             outline: none;
-            border-color: var(--knicks-orange);
+            border-color: var(--theme-accent);
             background: var(--input-bg, rgba(0, 61, 165, 0.08));
         }
 
@@ -598,7 +598,7 @@
 
         .note {
             background: rgba(241, 90, 34, 0.1);
-            border-left: 3px solid var(--knicks-orange);
+            border-left: 3px solid var(--theme-accent);
             padding: 12px;
             border-radius: 4px;
             font-size: 12px;
@@ -761,27 +761,6 @@
 
         // Main App Component
         const THEMES = {
-            'knicks': {
-                label: 'NY Knicks',
-                logo: 'https://upload.wikimedia.org/wikipedia/en/2/25/New_York_Knicks_logo.svg',
-                accent: '#F15A22', accentBlue: '#003DA5',
-                bgPrimary: '#0d1129', bgCard: 'linear-gradient(135deg, #111738 0%, #182048 100%)',
-                border: 'var(--border)', textPrimary: '#f0f0f0', textMuted: '#a0aec0',
-            },
-            'yankees': {
-                label: 'NY Yankees',
-                logo: '/yankees.png',
-                accent: '#003087', accentBlue: '#c4ced4',
-                bgPrimary: '#0a0e1a', bgCard: 'linear-gradient(135deg, #0f1528 0%, #1a2240 100%)',
-                border: '#1e2d5a', textPrimary: '#f0f0f0', textMuted: '#8e9ab0',
-            },
-            'giants': {
-                label: 'NY Giants',
-                logo: 'https://upload.wikimedia.org/wikipedia/commons/6/60/New_York_Giants_logo.svg',
-                accent: '#0B2265', accentBlue: '#A71930',
-                bgPrimary: '#080e20', bgCard: 'linear-gradient(135deg, #0c1530 0%, #152050 100%)',
-                border: '#1a2855', textPrimary: '#f0f0f0', textMuted: '#8a96b8',
-            },
             'market': {
                 label: 'Wall Street',
                 logo: '',
@@ -809,15 +788,6 @@
                 accent: '#1a56db', accentBlue: '#0369a1',
                 bgPrimary: '#f5f6fa', bgCard: 'linear-gradient(135deg, #ffffff 0%, #f0f2f8 100%)',
                 border: '#d1d5db', textPrimary: '#1a1a2e', textMuted: '#64748b',
-                isLight: true,
-            },
-            'pinstripe': {
-                label: 'Yankees Pinstripe',
-                logo: '/yankees.png',
-                logoEmoji: '',
-                accent: '#003087', accentBlue: '#c4ced4',
-                bgPrimary: '#f9f9fb', bgCard: 'linear-gradient(135deg, #ffffff 0%, #eef0f5 100%)',
-                border: '#c4ced4', textPrimary: '#1b2a4a', textMuted: '#5a6a8a',
                 isLight: true,
             },
             'bred': {
@@ -848,18 +818,10 @@
                 label: 'Clean Slate',
                 logo: '',
                 logoEmoji: '',
-                logoText: 'EJE',
+                logoText: 'WH',
                 accent: '#0d9488', accentBlue: '#0891b2',
                 bgPrimary: '#fafafa', bgCard: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
                 border: '#e0e0e0', textPrimary: '#1a1a1a', textMuted: '#6b7280',
-                isLight: true,
-            },
-            'knicks-away': {
-                label: 'Knicks Away',
-                logo: 'https://upload.wikimedia.org/wikipedia/en/2/25/New_York_Knicks_logo.svg',
-                accent: '#F15A22', accentBlue: '#003DA5',
-                bgPrimary: '#faf8f5', bgCard: 'linear-gradient(135deg, #ffffff 0%, #fef6ee 100%)',
-                border: '#e8ddd0', textPrimary: '#1a1520', textMuted: '#7a6e62',
                 isLight: true,
             },
             'cool-grey': {
@@ -870,48 +832,39 @@
                 border: '#c8c8c8', textPrimary: '#212121', textMuted: '#757575',
                 isLight: true,
             },
-            'tori': {
-                label: "Tori's Palace",
-                logo: '/tori.jpeg',
-                logoCircle: true,
-                accent: '#e91e9c', accentBlue: '#c084fc',
-                bgPrimary: '#1a0a2e', bgCard: 'linear-gradient(135deg, #231040 0%, #2d1347 100%)',
-                border: '#4a2068', textPrimary: '#f0e6ff', textMuted: '#a78bba',
-            },
-            'livi': {
-                label: "Livi's Kicks",
-                logo: '/livi.jpeg',
-                logoCircle: true,
-                accent: '#2d9cdb', accentBlue: '#ec4899',
-                bgPrimary: '#f8faff', bgCard: 'linear-gradient(135deg, #ffffff 0%, #e8f4fd 100%)',
-                border: '#bdd8f0', textPrimary: '#1a2332', textMuted: '#6b7c93',
-                isLight: true,
-            },
-            'livi-gameday': {
-                label: "Livi's Game Day",
-                logo: '/livi_gameday.png',
-                logoCircle: true,
-                logoEmoji: '🏀',
-                accent: '#F5E6C8', accentBlue: '#F58426',
-                bgPrimary: '#0a1628', bgCard: 'linear-gradient(135deg, #0f1d35 0%, #162545 100%)',
-                border: '#1e3050', textPrimary: '#F5E6C8', textMuted: '#8a9bb5',
-                positive: '#F58426', negative: '#ef4444',
-            },
-            'tori-daddy': {
-                label: 'Tori & Daddy',
-                logo: '/tori_yankees.png',
-                logoCircle: true,
-                logoEmoji: '👑',
-                accent: '#E8C170', accentBlue: '#7DB87D',
-                bgPrimary: '#1A1A1A', bgCard: 'linear-gradient(135deg, #222222 0%, #2a2520 100%)',
-                border: '#3a3530', textPrimary: '#F0E8DC', textMuted: '#9a8e80',
-                positive: '#7DB87D', negative: '#D4727A',
-            },
         };
 
         const applyTheme = (key) => {
             const t = THEMES[key];
-            if (!t) return;
+            // Also check custom themes from localStorage
+            if (!t) {
+                try {
+                    const customs = JSON.parse(localStorage.getItem('wheelhouse_custom_themes') || '[]');
+                    const idx = parseInt(key.replace('custom-', ''));
+                    const ct = customs[idx];
+                    if (ct) {
+                        const root = document.documentElement;
+                        root.style.setProperty('--bg-primary', ct.bgPrimary);
+                        root.style.setProperty('--bg-card', ct.bgCard);
+                        root.style.setProperty('--accent', ct.accent);
+                        root.style.setProperty('--accent-blue', ct.accentBlue);
+                        root.style.setProperty('--border', ct.border);
+                        root.style.setProperty('--text-primary', ct.textPrimary);
+                        root.style.setProperty('--text-muted', ct.textMuted);
+                        root.style.setProperty('--theme-accent', ct.accent);
+                        root.style.setProperty('--theme-secondary', ct.accentBlue);
+                        root.style.setProperty('--input-bg', ct.isLight ? '#ffffff' : '#111738');
+                        root.style.setProperty('--input-border', ct.isLight ? '#d1d5db' : 'var(--border)');
+                        root.style.setProperty('--overlay-bg', ct.isLight ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.7)');
+                        root.style.setProperty('--positive', ct.positive || '#10b981');
+                        root.style.setProperty('--negative', ct.negative || '#ef4444');
+                        document.body.style.backgroundColor = ct.bgPrimary;
+                        document.body.style.color = ct.textPrimary;
+                        document.body.classList.toggle('light-theme', !!ct.isLight);
+                    }
+                    return;
+                } catch { return; }
+            }
             const root = document.documentElement;
             root.style.setProperty('--bg-primary', t.bgPrimary);
             root.style.setProperty('--bg-card', t.bgCard);
@@ -920,8 +873,8 @@
             root.style.setProperty('--border', t.border);
             root.style.setProperty('--text-primary', t.textPrimary);
             root.style.setProperty('--text-muted', t.textMuted);
-            root.style.setProperty('--knicks-orange', t.accent);
-            root.style.setProperty('--knicks-blue', t.accentBlue);
+            root.style.setProperty('--theme-accent', t.accent);
+            root.style.setProperty('--theme-secondary', t.accentBlue);
             // Light mode support: input backgrounds, overlay colors
             root.style.setProperty('--input-bg', t.isLight ? '#ffffff' : '#111738');
             root.style.setProperty('--input-border', t.isLight ? '#d1d5db' : 'var(--border)');
@@ -934,7 +887,7 @@
         };
 
         // Apply saved theme immediately
-        applyTheme(localStorage.getItem('fcc-theme') || 'knicks');
+        applyTheme(localStorage.getItem('wh-theme') || 'market');
 
         const FONT_OPTIONS = {
             'inter': { label: 'Inter (Current)', family: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", boost: false },
@@ -967,9 +920,9 @@
             const [tickerFilter, setTickerFilter] = useState(null);
             const [tabFilter, setTabFilter] = useState(null);
             const [taxRate, setTaxRate] = useState(30);
-            const [fontKey, setFontKey] = useState(localStorage.getItem('fcc-font') || 'inter');
-            const [themeKey, setThemeKey] = useState(localStorage.getItem('fcc-theme') || 'knicks');
-            const theme = THEMES[themeKey] || THEMES['knicks'];
+            const [fontKey, setFontKey] = useState(localStorage.getItem('wh-font') || 'inter');
+            const [themeKey, setThemeKey] = useState(localStorage.getItem('wh-theme') || 'market');
+            const theme = allThemes[themeKey] || THEMES['market'];
             const [previewTheme, setPreviewTheme] = useState(null); // key of theme being previewed
             const accent = theme.accent;
             const [logoLightbox, setLogoLightbox] = useState(false);
@@ -988,7 +941,23 @@
             const [error, setError] = useState(null);
             const [success, setSuccess] = useState(null);
             const [lastRefreshed, setLastRefreshed] = useState(null);
-            const [timezone, setTimezone] = useState(localStorage.getItem('fcc-tz') || 'America/New_York');
+            const [timezone, setTimezone] = useState(localStorage.getItem('wh-tz') || 'America/New_York');
+            const [whConfig, setWhConfig] = useState(null);
+            const [showOnboarding, setShowOnboarding] = useState(false);
+            const [demoMode, setDemoMode] = useState(localStorage.getItem('wh_demo_mode') === 'true');
+            const [showThemeBuilder, setShowThemeBuilder] = useState(false);
+            const [customThemes, setCustomThemes] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('wheelhouse_custom_themes') || '[]'); } catch { return []; }
+            });
+            const [editingCustomTheme, setEditingCustomTheme] = useState(null);
+
+            const allThemes = useMemo(() => {
+                const merged = { ...THEMES };
+                customThemes.forEach((ct, i) => {
+                    merged[`custom-${i}`] = ct;
+                });
+                return merged;
+            }, [customThemes]);
 
             // Fetch all data
             const fetchData = useCallback(async () => {
@@ -1023,10 +992,42 @@
                 setLoading(false);
             }, []);
 
-            // Initial load
+            // Fetch WheelHouse config
             useEffect(() => {
-                fetchData().then(() => setLastRefreshed(new Date()));
+                fetch(`${API_BASE}/config`).then(r => r.json()).then(c => setWhConfig(c)).catch(() => {});
+            }, []);
+
+            // Initial load + onboarding check
+            useEffect(() => {
+                // Check for ?demo=true URL param
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('demo') === 'true' && !demoMode) {
+                    fetch(`${API_BASE}/demo-data`, { method: 'POST' })
+                        .then(() => {
+                            localStorage.setItem('wh_demo_mode', 'true');
+                            setDemoMode(true);
+                            window.history.replaceState({}, '', window.location.pathname);
+                            return fetchData();
+                        })
+                        .then(() => setLastRefreshed(new Date()));
+                    return;
+                }
+                fetchData().then(() => {
+                    setLastRefreshed(new Date());
+                    // Show onboarding if fresh install
+                    if (!localStorage.getItem('wh_onboarding_dismissed') && !demoMode) {
+                        // Check if data is empty (no equities AND no tax entries)
+                        setShowOnboarding(prev => true);  // Will be hidden if data exists in effect below
+                    }
+                });
             }, [fetchData]);
+
+            // Hide onboarding if user has data
+            useEffect(() => {
+                if (data.equities.length > 0 || data.taxLedger.length > 0) {
+                    setShowOnboarding(false);
+                }
+            }, [data.equities, data.taxLedger]);
 
             // Auto-refresh every 5 minutes
             useEffect(() => {
@@ -1036,6 +1037,40 @@
                 }, 5 * 60 * 1000);
                 return () => clearInterval(interval);
             }, []);
+
+            const handleStartDemo = async () => {
+                try {
+                    await fetch(`${API_BASE}/demo-data`, { method: 'POST' });
+                    localStorage.setItem('wh_demo_mode', 'true');
+                    setDemoMode(true);
+                    setShowOnboarding(false);
+                    await fetchData();
+                    setLastRefreshed(new Date());
+                } catch (err) {
+                    setError('Failed to load demo data');
+                }
+            };
+
+            const handleClearDemo = async () => {
+                try {
+                    await fetch(`${API_BASE}/demo-data`, { method: 'DELETE' });
+                    localStorage.removeItem('wh_demo_mode');
+                    setDemoMode(false);
+                    window.location.reload();
+                } catch (err) {
+                    setError('Failed to clear demo data');
+                }
+            };
+
+            const handleDismissOnboarding = () => {
+                localStorage.setItem('wh_onboarding_dismissed', 'true');
+                setShowOnboarding(false);
+            };
+
+            const handleSetupPortfolio = () => {
+                handleDismissOnboarding();
+                setCurrentTab('equities');
+            };
 
             const handleRefreshPrices = async (silent = false) => {
                 try {
@@ -1067,6 +1102,55 @@
                     fontFamily: FONT_OPTIONS[fontKey]?.family,
                     fontSize: FONT_OPTIONS[fontKey]?.boost ? '15px' : '13px'
                 }}>
+                    {/* Demo Mode Banner */}
+                    {demoMode && (
+                        <div style={{ background:'#f59e0b', color:'#1a1a1a', padding:'8px 16px', textAlign:'center', fontSize:'13px', fontWeight:600, borderRadius:'6px', marginBottom:'12px', display:'flex', alignItems:'center', justifyContent:'center', gap:'12px' }}>
+                            <span>DEMO MODE — Showing sample data.</span>
+                            <button onClick={handleClearDemo} style={{ background:'rgba(0,0,0,0.15)', border:'none', padding:'4px 12px', borderRadius:'4px', cursor:'pointer', fontSize:'12px', fontWeight:600, color:'#1a1a1a' }}>
+                                Clear Demo Data &amp; Start Fresh
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Onboarding Screen */}
+                    {showOnboarding && !demoMode && (
+                        <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:10000, background:'var(--bg-primary)', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' }}>
+                            <button onClick={handleDismissOnboarding} style={{ position:'absolute', top:'20px', right:'20px', background:'none', border:'none', color:'var(--text-muted)', fontSize:'24px', cursor:'pointer', padding:'8px' }}>&times;</button>
+                            <div style={{ textAlign:'center', maxWidth:'500px', padding:'40px' }}>
+                                <div style={{ fontSize:'48px', marginBottom:'16px' }}>&#128200;</div>
+                                <h1 style={{ fontSize:'36px', fontWeight:800, color:'var(--accent)', marginBottom:'8px', fontFamily:'Oswald' }}>WheelHouse</h1>
+                                <p style={{ fontSize:'16px', color:'var(--text-muted)', marginBottom:'40px' }}>Welcome to your portfolio command center.</p>
+                                <div style={{ textAlign:'left', background:'var(--bg-card)', border:'1px solid var(--border)', borderRadius:'12px', padding:'24px', marginBottom:'32px' }}>
+                                    <p style={{ fontSize:'14px', color:'var(--text-primary)', fontWeight:600, marginBottom:'16px' }}>Get started in 3 steps:</p>
+                                    <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+                                        <div style={{ display:'flex', gap:'12px', alignItems:'flex-start' }}>
+                                            <span style={{ background:'var(--accent)', color:'var(--bg-primary)', width:'24px', height:'24px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:700, flexShrink:0 }}>1</span>
+                                            <span style={{ fontSize:'13px', color:'var(--text-primary)' }}>Add your first position — <strong>Equities tab</strong> — "+ Add Position"</span>
+                                        </div>
+                                        <div style={{ display:'flex', gap:'12px', alignItems:'flex-start' }}>
+                                            <span style={{ background:'var(--accent)', color:'var(--bg-primary)', width:'24px', height:'24px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:700, flexShrink:0 }}>2</span>
+                                            <span style={{ fontSize:'13px', color:'var(--text-primary)' }}>Set up your watchlist — <strong>Watchlist tab</strong> — add tickers you're tracking</span>
+                                        </div>
+                                        <div style={{ display:'flex', gap:'12px', alignItems:'flex-start' }}>
+                                            <span style={{ background:'var(--accent)', color:'var(--bg-primary)', width:'24px', height:'24px', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:700, flexShrink:0 }}>3</span>
+                                            <span style={{ fontSize:'13px', color:'var(--text-primary)' }}>Log a covered call — <strong>CC Income tab</strong> — "+ Add CC"</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ display:'flex', gap:'12px', justifyContent:'center' }}>
+                                    <button onClick={handleStartDemo}
+                                        style={{ padding:'12px 24px', borderRadius:'8px', border:'2px solid var(--accent)', background:'transparent', color:'var(--accent)', cursor:'pointer', fontSize:'14px', fontWeight:600 }}>
+                                        Start with Demo Data
+                                    </button>
+                                    <button onClick={handleSetupPortfolio}
+                                        style={{ padding:'12px 24px', borderRadius:'8px', border:'none', background:'var(--accent)', color:'var(--bg-primary)', cursor:'pointer', fontSize:'14px', fontWeight:700 }}>
+                                        Set Up My Portfolio
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {error && <ErrorDisplay message={error} onClose={() => setError(null)} />}
                     {success && <SuccessDisplay message={success} onClose={() => setSuccess(null)} />}
 
@@ -1085,9 +1169,9 @@
 
                     {/* Theme Preview Modal */}
                     {previewTheme && (() => {
-                        const pt = THEMES[previewTheme];
+                        const pt = allThemes[previewTheme];
                         if (!pt) return null;
-                        const applyAndClose = () => { setThemeKey(previewTheme); localStorage.setItem('fcc-theme', previewTheme); applyTheme(previewTheme); setPreviewTheme(null); };
+                        const applyAndClose = () => { setThemeKey(previewTheme); localStorage.setItem('wh-theme', previewTheme); applyTheme(previewTheme); setPreviewTheme(null); };
                         const cancel = () => { setPreviewTheme(null); };
                         return (
                             <div onClick={cancel} onKeyDown={e => { if (e.key === 'Escape') cancel(); if (e.key === 'Enter') applyAndClose(); }} tabIndex={0}
@@ -1139,6 +1223,166 @@
                         );
                     })()}
 
+                    {/* Theme Builder Modal */}
+                    {showThemeBuilder && (() => {
+                        const ThemeBuilder = () => {
+                            const defaults = editingCustomTheme || {
+                                label: '', accent: '#00c853', accentBlue: '#1565c0',
+                                bgPrimary: '#0a0f0a', bgCard: 'linear-gradient(135deg, #0f1a0f 0%, #142014 100%)',
+                                border: '#1a3a1a', textPrimary: '#e8f5e9', textMuted: '#81c784',
+                                logo: '', logoEmoji: '', isLight: false
+                            };
+                            const [name, setName] = useState(defaults.label || '');
+                            const [accent, setAccent] = useState(defaults.accent);
+                            const [secondary, setSecondary] = useState(defaults.accentBlue);
+                            const [bgMode, setBgMode] = useState(defaults.isLight ? 'light' : (defaults.bgPrimary === '#000000' ? 'midnight' : 'dark'));
+                            const [font, setFont] = useState('inter');
+
+                            const bgPresets = {
+                                dark: { bgPrimary: '#0a0f0a', bgCard: 'linear-gradient(135deg, #0f1a0f 0%, #142014 100%)', border: '#1a3a1a', textPrimary: '#e8f5e9', textMuted: '#81c784', isLight: false },
+                                light: { bgPrimary: '#f5f6fa', bgCard: 'linear-gradient(135deg, #ffffff 0%, #f0f2f8 100%)', border: '#d1d5db', textPrimary: '#1a1a2e', textMuted: '#64748b', isLight: true },
+                                midnight: { bgPrimary: '#000000', bgCard: 'linear-gradient(135deg, #0a0a0a 0%, #0f0f0f 100%)', border: '#2a2a2a', textPrimary: '#f0f0f0', textMuted: '#888888', isLight: false },
+                            };
+
+                            const bg = bgPresets[bgMode];
+                            const preview = { ...bg, accent, accentBlue: secondary, logo: '', logoEmoji: '', label: name || 'Custom Theme' };
+
+                            const handleSave = () => {
+                                if (!name.trim()) return;
+                                const newTheme = { ...preview, label: name.trim() };
+                                let updated;
+                                if (editingCustomTheme && editingCustomTheme._idx !== undefined) {
+                                    updated = [...customThemes];
+                                    updated[editingCustomTheme._idx] = newTheme;
+                                } else {
+                                    if (customThemes.length >= 5) { alert('Max 5 custom themes. Delete one first.'); return; }
+                                    updated = [...customThemes, newTheme];
+                                }
+                                setCustomThemes(updated);
+                                localStorage.setItem('wheelhouse_custom_themes', JSON.stringify(updated));
+                                const newKey = `custom-${editingCustomTheme?._idx ?? (updated.length - 1)}`;
+                                setThemeKey(newKey);
+                                localStorage.setItem('wh-theme', newKey);
+                                applyTheme(newKey);
+                                setEditingCustomTheme(null);
+                                setShowThemeBuilder(false);
+                            };
+
+                            const handleDelete = (idx) => {
+                                const updated = customThemes.filter((_, i) => i !== idx);
+                                setCustomThemes(updated);
+                                localStorage.setItem('wheelhouse_custom_themes', JSON.stringify(updated));
+                                if (themeKey === `custom-${idx}`) {
+                                    setThemeKey('market');
+                                    localStorage.setItem('wh-theme', 'market');
+                                    applyTheme('market');
+                                }
+                            };
+
+                            return (
+                                <div onClick={() => { setShowThemeBuilder(false); setEditingCustomTheme(null); }}
+                                    style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:9999, background:'rgba(0,0,0,0.8)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                    <div onClick={e => e.stopPropagation()} style={{ width:'520px', maxWidth:'95vw', maxHeight:'90vh', overflow:'auto', borderRadius:'12px', background:'var(--bg-primary)', border:'2px solid var(--accent)', boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+                                        <div style={{ padding:'20px', borderBottom:'1px solid var(--border)' }}>
+                                            <div style={{ fontSize:'18px', fontWeight:700, color:'var(--text-primary)' }}>Theme Builder</div>
+                                            <div style={{ fontSize:'12px', color:'var(--text-muted)', marginTop:'4px' }}>Create a custom theme ({customThemes.length}/5 used)</div>
+                                        </div>
+                                        <div style={{ padding:'20px', display:'flex', flexDirection:'column', gap:'16px' }}>
+                                            <div>
+                                                <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'4px' }}>Theme Name</label>
+                                                <input value={name} onChange={e => setName(e.target.value)} placeholder="My Blue Theme" maxLength={30}
+                                                    style={{ width:'100%', padding:'8px 12px', borderRadius:'6px', border:'1px solid var(--border)', background:'var(--input-bg, #111738)', color:'var(--text-primary)', fontSize:'13px' }} />
+                                            </div>
+                                            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px' }}>
+                                                <div>
+                                                    <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'4px' }}>Accent Color</label>
+                                                    <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
+                                                        <input type="color" value={accent} onChange={e => setAccent(e.target.value)} style={{ width:'36px', height:'36px', border:'none', cursor:'pointer', borderRadius:'4px' }} />
+                                                        <input value={accent} onChange={e => setAccent(e.target.value)} style={{ flex:1, padding:'6px 8px', borderRadius:'4px', border:'1px solid var(--border)', background:'var(--input-bg, #111738)', color:'var(--text-primary)', fontSize:'12px', fontFamily:'monospace' }} />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'4px' }}>Secondary Color</label>
+                                                    <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
+                                                        <input type="color" value={secondary} onChange={e => setSecondary(e.target.value)} style={{ width:'36px', height:'36px', border:'none', cursor:'pointer', borderRadius:'4px' }} />
+                                                        <input value={secondary} onChange={e => setSecondary(e.target.value)} style={{ flex:1, padding:'6px 8px', borderRadius:'4px', border:'1px solid var(--border)', background:'var(--input-bg, #111738)', color:'var(--text-primary)', fontSize:'12px', fontFamily:'monospace' }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'4px' }}>Background</label>
+                                                <div style={{ display:'flex', gap:'8px' }}>
+                                                    {['dark','light','midnight'].map(m => (
+                                                        <button key={m} onClick={() => setBgMode(m)}
+                                                            style={{ flex:1, padding:'8px', borderRadius:'6px', border:`2px solid ${bgMode===m ? 'var(--accent)' : 'var(--border)'}`,
+                                                                background: bgMode===m ? 'rgba(0,212,255,0.1)' : 'transparent', color:'var(--text-primary)', cursor:'pointer', fontSize:'12px', fontWeight: bgMode===m ? 700 : 400, textTransform:'capitalize' }}>
+                                                            {m}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'4px' }}>Font</label>
+                                                <select value={font} onChange={e => setFont(e.target.value)}
+                                                    style={{ width:'100%', padding:'8px', borderRadius:'6px', border:'1px solid var(--border)', background:'var(--input-bg, #111738)', color:'var(--text-primary)', fontSize:'13px' }}>
+                                                    {Object.entries(FONT_OPTIONS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                                                </select>
+                                            </div>
+                                            {/* Live Preview */}
+                                            <div>
+                                                <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'8px' }}>Preview</label>
+                                                <div style={{ background:preview.bgPrimary, borderRadius:'8px', padding:'12px', border:`1px solid ${preview.border}` }}>
+                                                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'8px' }}>
+                                                        <div style={{ background:preview.bgCard, border:`1px solid ${preview.border}`, borderRadius:'6px', padding:'8px' }}>
+                                                            <div style={{ fontSize:'9px', color:preview.textMuted, textTransform:'uppercase' }}>Portfolio</div>
+                                                            <div style={{ fontSize:'16px', fontWeight:700, color:preview.accent, fontFamily:'Oswald' }}>$36,386</div>
+                                                        </div>
+                                                        <div style={{ background:preview.bgCard, border:`1px solid ${preview.border}`, borderRadius:'6px', padding:'8px' }}>
+                                                            <div style={{ fontSize:'9px', color:preview.textMuted, textTransform:'uppercase' }}>Daily P/L</div>
+                                                            <div style={{ fontSize:'16px', fontWeight:700, color:'#10b981', fontFamily:'Oswald' }}>+$428</div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ background:preview.bgCard, border:`1px solid ${preview.border}`, borderRadius:'6px', padding:'6px 10px', fontSize:'11px' }}>
+                                                        <div style={{ display:'flex', justifyContent:'space-between' }}>
+                                                            <span style={{ fontWeight:700, color:preview.accent }}>AAPL</span>
+                                                            <span style={{ color:'#10b981' }}>+2.1%</span>
+                                                        </div>
+                                                        <div style={{ display:'flex', justifyContent:'space-between', marginTop:'2px' }}>
+                                                            <span style={{ color:preview.textMuted }}>50 shares</span>
+                                                            <span style={{ color:preview.accentBlue }}>$178.32</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Existing custom themes */}
+                                        {customThemes.length > 0 && (
+                                            <div style={{ padding:'0 20px 12px', borderTop:'1px solid var(--border)', paddingTop:'12px' }}>
+                                                <div style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', marginBottom:'6px' }}>Your Custom Themes</div>
+                                                {customThemes.map((ct, i) => (
+                                                    <div key={i} style={{ display:'flex', alignItems:'center', gap:'8px', padding:'4px 0' }}>
+                                                        <div style={{ width:'16px', height:'16px', borderRadius:'50%', background:ct.accent, border:'1px solid var(--border)' }} />
+                                                        <span style={{ flex:1, fontSize:'12px', color:'var(--text-primary)' }}>{ct.label}</span>
+                                                        <button onClick={() => { setEditingCustomTheme({...ct, _idx: i}); setName(ct.label); }} style={{ background:'none', border:'none', cursor:'pointer', fontSize:'14px', padding:'2px' }} title="Edit">&#9998;</button>
+                                                        <button onClick={() => handleDelete(i)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:'14px', padding:'2px', color:'var(--negative, #ef4444)' }} title="Delete">&#128465;</button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* Buttons */}
+                                        <div style={{ padding:'12px 20px', borderTop:'1px solid var(--border)', display:'flex', gap:'8px', justifyContent:'flex-end' }}>
+                                            <button onClick={() => { setShowThemeBuilder(false); setEditingCustomTheme(null); }}
+                                                style={{ padding:'8px 20px', borderRadius:'6px', border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', cursor:'pointer', fontSize:'13px' }}>Cancel</button>
+                                            <button onClick={handleSave} disabled={!name.trim()}
+                                                style={{ padding:'8px 20px', borderRadius:'6px', border:'none', background: name.trim() ? 'var(--accent)' : '#555', color:'#fff', cursor: name.trim() ? 'pointer' : 'not-allowed', fontSize:'13px', fontWeight:700 }}>Save Theme</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        };
+                        return <ThemeBuilder />;
+                    })()}
+
                     <div className="header-top">
                         <div className="header-title" style={{display:"flex",alignItems:"center",gap:"14px"}}>
                             <span style={{ cursor: theme.logo ? 'pointer' : 'default' }} onClick={() => theme.logo && setLogoLightbox(true)}>
@@ -1148,18 +1392,19 @@
                             {!theme.logo && !theme.logoText && theme.logoEmoji && <span style={theme.logoStyle || {fontSize:'36px'}}>{theme.logoEmoji}</span>}
                             {!theme.logo && !theme.logoText && !theme.logoEmoji && <span style={{fontSize:'36px'}}>💰</span>}
                             </span>
-                            <span>Ed's Financial Command Center</span>
+                            <span>WheelHouse</span>
                         </div>
                         <div className="button-group" style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
-                            <select value={themeKey} onChange={e => setPreviewTheme(e.target.value)}
+                            <select value={themeKey} onChange={e => { if (e.target.value === '__builder__') { setShowThemeBuilder(true); } else { setPreviewTheme(e.target.value); } }}
                                 style={{ padding:'4px 8px', fontSize:'11px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
-                                {Object.entries(THEMES).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                                {Object.entries(allThemes).map(([k,v]) => <option key={k} value={k}>{v.label}{k.startsWith('custom-') ? ' *' : ''}</option>)}
+                                <option value="__builder__">+ Build Your Own</option>
                             </select>
-                            <select value={fontKey} onChange={e => { setFontKey(e.target.value); localStorage.setItem('fcc-font', e.target.value); }}
+                            <select value={fontKey} onChange={e => { setFontKey(e.target.value); localStorage.setItem('wh-font', e.target.value); }}
                                 style={{ padding:'4px 8px', fontSize:'11px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
                                 {Object.entries(FONT_OPTIONS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
                             </select>
-                            <select value={timezone} onChange={e => { setTimezone(e.target.value); localStorage.setItem('fcc-tz', e.target.value); }}
+                            <select value={timezone} onChange={e => { setTimezone(e.target.value); localStorage.setItem('wh-tz', e.target.value); }}
                                 style={{ padding:'4px 8px', fontSize:'11px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
                                 {Object.entries(TIMEZONE_OPTIONS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
                             </select>
@@ -1175,15 +1420,37 @@
                     </div>
 
                     <div className="tab-header">
-                        {['Dashboard', 'Risk', 'News', 'Equities', 'Options', 'Crypto', 'Watchlist', "Wheeler's", 'Tax Ledger', 'CC Income', 'Cash Flow', 'Dark Pool & Insiders', "Uncle Eddi3's"].map(tab => (
-                            <button
-                                key={tab}
-                                className={`tab-button ${currentTab === tab.toLowerCase().replace(/ /g, '-') ? 'active' : ''}`}
-                                onClick={() => { setCurrentTab(tab.toLowerCase().replace(/ /g, '-')); setTickerFilter(null); setTabFilter(null); }}
-                            >
-                                {tab}
-                            </button>
-                        ))}
+                        {(() => {
+                            const tc = whConfig?.tabs || {};
+                            const fc = whConfig?.features || {};
+                            const allTabs = [
+                                { label: 'Dashboard', key: 'dashboard', config: 'dashboard' },
+                                { label: 'Risk', key: 'risk', config: null, feature: 'portfolio_risk_dashboard' },
+                                { label: 'News', key: 'news', config: 'news' },
+                                { label: 'Equities', key: 'equities', config: 'equities' },
+                                { label: 'Options', key: 'options', config: 'options' },
+                                { label: 'Crypto', key: 'crypto', config: 'crypto' },
+                                { label: 'Watchlist', key: 'watchlist', config: 'watchlist' },
+                                { label: "Wheeler's", key: "wheeler's", config: 'wheelers_paradise' },
+                                { label: 'Tax Ledger', key: 'tax-ledger', config: 'tax_ledger' },
+                                { label: 'CC Income', key: 'cc-income', config: 'cc_income' },
+                                { label: 'Cash Flow', key: 'cash-flow', config: null, feature: 'cash_flow_tracker' },
+                                { label: 'Dark Pool & Insiders', key: 'dark-pool-&-insiders', config: 'dark_pool_insiders' },
+                                { label: "Uncle Eddi3's", key: "uncle-eddi3's", config: 'uncle_eddies' },
+                            ];
+                            const visibleTabs = allTabs.filter(t => {
+                                if (t.config && tc[t.config] === false) return false;
+                                if (t.feature && fc[t.feature] === false) return false;
+                                return true;
+                            });
+                            return visibleTabs.map(tab => (
+                                <button key={tab.key}
+                                    className={`tab-button ${currentTab === tab.key ? 'active' : ''}`}
+                                    onClick={() => { setCurrentTab(tab.key); setTickerFilter(null); setTabFilter(null); }}>
+                                    {tab.label}
+                                </button>
+                            ));
+                        })()}
                     </div>
 
                     {loading && !data.summary.total_invested ? (
@@ -7847,6 +8114,9 @@
                     )}
 
                     </>)}
+                    <div style={{textAlign:'center',padding:'24px 0 12px',fontSize:'11px',color:'var(--text-muted)',borderTop:'1px solid var(--border)',marginTop:'40px'}}>
+                        Built by <a href="https://github.com/edwardespinal-prog" target="_blank" rel="noopener" style={{color:'var(--accent)',textDecoration:'none'}}>Ed Espinal</a> · WheelHouse v1.0
+                    </div>
                 </div>
             );
         };

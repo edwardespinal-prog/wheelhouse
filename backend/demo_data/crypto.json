@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "asset": "ETH",
+    "quantity": 1.5,
+    "avg_price": 2800.00,
+    "current_price": 2800.00,
+    "market_value": 4200.00,
+    "pl_dollar": 0,
+    "pl_percent": 0,
+    "date_acquired": "2024-04-01"
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "ticker": "SOFI",
+    "date_opened": "2025-04-01",
+    "contract_details": "SOFI $12C 04/17/25",
+    "premium_collected": 84.00,
+    "date_closed": "",
+    "cost_to_close": 0,
+    "net_profit": 84.00,
+    "status": "open"
+  },
+  {
+    "id": 2,
+    "ticker": "AAPL",
+    "date_opened": "2025-03-15",
+    "contract_details": "AAPL $200C 06/20/25",
+    "premium_collected": 312.00,
+    "date_closed": "",
+    "cost_to_close": 0,
+    "net_profit": 312.00,
+    "status": "open"
+  }
+]

@@ -14,7 +14,7 @@ from pathlib import Path
 # ── Config ──────────────────────────────────────────────────────────────
 import os
 DATA_DIR = Path("/data") if os.path.isdir("/data") else Path(__file__).parent / "data"
-USER_AGENT = "Ed Espinal Financial Command Center edwardespinal@gmail.com"
+USER_AGENT = "WheelHouse Portfolio Command Center"
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -384,7 +384,7 @@ class EDGARInsiderProvider(InsiderTradeProvider):
     def __init__(self):
         try:
             from edgar import set_identity
-            set_identity("Ed Espinal edwardespinal@gmail.com")
+            set_identity("WheelHouse User")
             self._available = True
         except ImportError:
             self._available = False

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Ed's Financial Command Center - Backend Server
+WheelHouse — Portfolio Command Center
 A self-contained Python server using standard library http.server.
 External deps: yfinance, requests, beautifulsoup4, pandas, openpyxl
 
@@ -79,10 +79,10 @@ BASE_DIR = Path(__file__).parent.parent
 BACKEND_DIR = Path(__file__).parent
 DATA_DIR = Path("/data") if os.path.isdir("/data") else BACKEND_DIR / "data"  # Render persistent disk
 FRONTEND_DIR = BASE_DIR / "frontend"
-EXCEL_FILE = BASE_DIR / "Net Worth Dashboard.xlsx"
+EXCEL_FILE = None  # Legacy: Excel import not used in WheelHouse
 
 # ── Portfolio Constants ──────────────────────────────────────────────────
-JAN1_2026_NET_WORTH = 120443  # Confirmed Jan 1, 2026 portfolio value from RH
+JAN1_NET_WORTH = 0  # Set this to your Jan 1 portfolio value for YTD benchmark
 
 # ── Price Cache ──────────────────────────────────────────────────────────
 price_cache = {}
@@ -183,6 +183,7 @@ def load_snapshots():
 
 
 def load_from_excel():
+    return  # Disabled in WheelHouse
     if not EXCEL_FILE.exists():
         print(f"⚠ Excel file not found: {EXCEL_FILE}")
         return
@@ -1474,7 +1475,7 @@ def compute_watchlist_alerts():
 
 
 # ── HTTP Request Handler ────────────────────────────────────────────────
-BAD_OCC_SYMBOLS = {"RKLB270127C00075000"}
+BAD_OCC_SYMBOLS = set()  # Add OCC symbols that cause Yahoo 404 loops
 _fg_cache = {"data": {"equity": None, "crypto": None}, "ts": 0}
 
 def get_fear_greed():
@@ -1625,10 +1626,10 @@ def get_benchmarks():
     cr_val = sum(c.get("market_value", 0) for c in store["crypto"])
     cash_bal = float(store.get("cash_balance", 0) or 0)
     current_nw = eq_val + opt_val + cr_val + cash_bal
-    portfolio_ytd = ((current_nw - JAN1_2026_NET_WORTH) / JAN1_2026_NET_WORTH) * 100
+    portfolio_ytd = ((current_nw - JAN1_NET_WORTH) / JAN1_NET_WORTH) * 100
     result["portfolio_ytd_pct"] = round(portfolio_ytd, 2)
     result["portfolio_current_nw"] = round(current_nw, 2)
-    result["portfolio_jan1_nw"] = JAN1_2026_NET_WORTH
+    result["portfolio_jan1_nw"] = JAN1_NET_WORTH
 
     _bench_cache["data"] = result
     _bench_cache["ts"] = time.time()
@@ -3292,6 +3293,34 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
                 print(f"Risk dashboard error: {e}")
                 self._json_response({"error": str(e)}, 500)
 
+        # WheelHouse Config
+        elif path == "/api/config":
+            config_path = DATA_DIR / "wheelhouse_config.json"
+            if config_path.exists():
+                with open(config_path) as f:
+                    self._json_response(json.load(f))
+            else:
+                # Default config
+                default_config = {
+                    "site_name": "WheelHouse",
+                    "tagline": "Your personal portfolio command center",
+                    "creator": "Ed Espinal",
+                    "creator_url": "https://github.com/edwardespinal-prog",
+                    "tabs": {
+                        "dashboard": True, "equities": True, "options": True,
+                        "watchlist": True, "tax_ledger": True, "cc_income": True,
+                        "crypto": True, "news": True, "dark_pool_insiders": True,
+                        "wheelers_paradise": True, "uncle_eddies": True
+                    },
+                    "features": {
+                        "eth_institutional_intelligence": True,
+                        "portfolio_risk_dashboard": True,
+                        "cash_flow_tracker": True,
+                        "benchmark_comparison": True
+                    }
+                }
+                self._json_response(default_config)
+
         else:
             self._json_response({"error": "Not found"}, 404)
 
@@ -3900,6 +3929,26 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
                 "realized_pl": realized_pl, "cash_balance": store["cash_balance"]
             })
 
+        elif path == "/api/demo-data":
+            # Load demo dataset
+            demo_dir = BACKEND_DIR / "demo_data"
+            if demo_dir.exists():
+                for fname in demo_dir.glob("*.json"):
+                    key = fname.stem
+                    if key in store:
+                        with open(fname) as f:
+                            store[key] = json.load(f)
+                # Also load supplementary files
+                for fname in ["watchlist.json", "cash_flow.json", "sales.json", "box_purchases.json"]:
+                    src = demo_dir / fname
+                    if src.exists():
+                        import shutil
+                        shutil.copy2(src, DATA_DIR / fname)
+                save_store()
+                self._json_response({"status": "demo_data_loaded"})
+            else:
+                self._json_response({"error": "Demo data directory not found"}, 404)
+
         else:
             self._json_response({"error": "Not found"}, 404)
 
@@ -4077,6 +4126,13 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
                     return
             self._json_response({"error": "Not found"}, 404)
 
+        elif path == "/api/config":
+            config_path = DATA_DIR / "wheelhouse_config.json"
+            ensure_data_dir()
+            with open(config_path, "w") as f:
+                json.dump(body, f, indent=2)
+            self._json_response(body)
+
         else:
             self._json_response({"error": "Not found"}, 404)
 
@@ -4149,6 +4205,23 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
             store["box_purchases"] = [b for b in store["box_purchases"] if b["id"] != entry_id]
             save_store()
             self._json_response({"deleted": entry_id})
+
+        elif path == "/api/demo-data":
+            # Clear all data back to empty
+            for key in store:
+                if isinstance(store[key], list):
+                    store[key] = []
+                elif isinstance(store[key], dict):
+                    store[key] = {}
+            save_store()
+            # Also clear supplementary files
+            for fname in ["watchlist.json", "cash_flow.json", "sales.json", "box_purchases.json",
+                         "cash_balance.json", "snapshots.json", "intraday_log.json",
+                         "options_value_log.json", "historical_prices_cache.json"]:
+                p = DATA_DIR / fname
+                if p.exists():
+                    p.unlink()
+            self._json_response({"status": "all_data_cleared"})
 
         else:
             self._json_response({"error": "Not found"}, 404)
@@ -4949,7 +5022,7 @@ def main():
             {"item_name": "Nike Dunk High Game Royal", "category": "sneakers", "platform": "ebay",
              "sale_price": 85.00, "platform_fees": 11.26, "shipping_cost": 7.77, "purchase_price": 0,
              "status": "completed", "date_sold": "2026-01-17", "date_shipped": "2026-01-18", "date_completed": "2026-01-24"},
-            {"item_name": "Kith x Knicks Crewneck", "category": "clothing", "platform": "ebay",
+            {"item_name": "Kith Crewneck Sweatshirt", "category": "clothing", "platform": "ebay",
              "sale_price": 162.21, "platform_fees": 21.49, "shipping_cost": 0, "purchase_price": 0,
              "status": "completed", "date_sold": "2026-01-13", "date_shipped": "2026-01-14", "date_completed": "2026-01-20"},
             {"item_name": "Kith Palette Bears Crewneck", "category": "clothing", "platform": "ebay",
@@ -5025,7 +5098,7 @@ def main():
     store["summary"]["tax_reserve"] = tax_sum["total_tax_reserve"]
 
     print(f"\n{'='*60}")
-    print(f"  Ed's Financial Command Center")
+    print(f"  WheelHouse")
     print(f"  Portfolio: {len(store['equities'])} equities | {len(store['options'])} options | {len(store['crypto'])} crypto | {len(store['cards'])} cards")
     print(f"  Market Value: ${market_val:,.2f}")
     print(f"  Card Collection: ${card_val:,.2f}")
