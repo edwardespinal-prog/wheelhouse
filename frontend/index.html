@@ -763,28 +763,28 @@
         const THEMES = {
             'market': {
                 label: 'Wall Street',
-                logo: '',
+                logo: '', logoEmoji: '💰',
                 accent: '#00c853', accentBlue: '#1565c0',
                 bgPrimary: '#0a0f0a', bgCard: 'linear-gradient(135deg, #0f1a0f 0%, #142014 100%)',
                 border: '#1a3a1a', textPrimary: '#e8f5e9', textMuted: '#81c784',
             },
             'ai': {
                 label: 'AI / Neural',
-                logo: '',
+                logo: '', logoEmoji: '🧠',
                 accent: '#7c3aed', accentBlue: '#06b6d4',
                 bgPrimary: '#0c0a1a', bgCard: 'linear-gradient(135deg, #120e28 0%, #1a1440 100%)',
                 border: '#2a1f5a', textPrimary: '#f0e8ff', textMuted: '#a78bfa',
             },
             'dogs': {
                 label: 'Good Boy',
-                logo: '',
+                logo: '', logoEmoji: '🐕',
                 accent: '#d97706', accentBlue: '#92400e',
                 bgPrimary: '#1a1408', bgCard: 'linear-gradient(135deg, #211a0c 0%, #2a2010 100%)',
                 border: '#3d2e14', textPrimary: '#fef3c7', textMuted: '#d4a76a',
             },
             'light': {
                 label: 'Light Mode',
-                logoEmoji: '💹', logo: '',
+                logoEmoji: '☀️', logo: '',
                 accent: '#1a56db', accentBlue: '#0369a1',
                 bgPrimary: '#f5f6fa', bgCard: 'linear-gradient(135deg, #ffffff 0%, #f0f2f8 100%)',
                 border: '#d1d5db', textPrimary: '#1a1a2e', textMuted: '#64748b',
@@ -793,7 +793,7 @@
             'bred': {
                 label: 'Jordan Bred',
                 logo: '',
-                logoEmoji: '🏀',
+                logoEmoji: '🔥',
                 accent: '#d32f2f', accentBlue: '#b71c1c',
                 bgPrimary: '#0a0a0a', bgCard: 'linear-gradient(135deg, #141414 0%, #1a1010 100%)',
                 border: '#3a1a1a', textPrimary: '#f5f5f5', textMuted: '#b0a0a0',
@@ -809,7 +809,7 @@
             'concord': {
                 label: 'Concord',
                 logo: '',
-                logoEmoji: '👟',
+                logoEmoji: '💎',
                 accent: '#7b1fa2', accentBlue: '#e1bee7',
                 bgPrimary: '#0e0a14', bgCard: 'linear-gradient(135deg, #150e20 0%, #1c1430 100%)',
                 border: '#2e1f4a', textPrimary: '#f3e5f5', textMuted: '#b39ddb',
@@ -817,8 +817,7 @@
             'clean-slate': {
                 label: 'Clean Slate',
                 logo: '',
-                logoEmoji: '',
-                logoText: 'WH',
+                logoEmoji: '⚡',
                 accent: '#0d9488', accentBlue: '#0891b2',
                 bgPrimary: '#fafafa', bgCard: 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
                 border: '#e0e0e0', textPrimary: '#1a1a1a', textMuted: '#6b7280',
@@ -826,7 +825,7 @@
             },
             'cool-grey': {
                 label: 'Cool Grey',
-                logo: '/jordan11.jpg',
+                logo: '', logoEmoji: '🗿',
                 accent: '#c62828', accentBlue: '#9e9e9e',
                 bgPrimary: '#f0f0f0', bgCard: 'linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)',
                 border: '#c8c8c8', textPrimary: '#212121', textMuted: '#757575',
@@ -1239,6 +1238,32 @@
                             const [bgMode, setBgMode] = useState(defaults.isLight ? 'light' : (defaults.bgPrimary === '#000000' ? 'midnight' : 'dark'));
                             const [font, setFont] = useState('inter');
 
+                            // Logo state
+                            const defaultLogoType = defaults.customLogo ? defaults.customLogo.type : 'emoji';
+                            const defaultLogoEmoji = defaults.customLogo?.type === 'emoji' ? defaults.customLogo.value : '📊';
+                            const defaultLogoImage = defaults.customLogo?.type === 'image' ? defaults.customLogo.value : null;
+                            const [logoMode, setLogoMode] = useState(defaultLogoType);
+                            const [selectedEmoji, setSelectedEmoji] = useState(defaultLogoEmoji);
+                            const [uploadedImage, setUploadedImage] = useState(defaultLogoImage);
+                            const [uploadError, setUploadError] = useState(null);
+                            const EMOJI_GRID = ['📊','💰','📈','🏦','💎','🔥','🚀','🐂','🐻','💸','🎯','⚡','🏆','🎰','💹','📉','🪙','🗿','👑','🦅','⭐','🌊','🔮','🧠','🛡️','🎲','💼','🏠','🌙','☀️'];
+
+                            const handleImageUpload = (file) => {
+                                setUploadError(null);
+                                if (!file) return;
+                                if (!['image/png','image/jpeg','image/gif'].includes(file.type)) {
+                                    setUploadError('Only PNG, JPG, and GIF files are allowed.');
+                                    return;
+                                }
+                                if (file.size > 100 * 1024) {
+                                    setUploadError('Image must be under 100KB.');
+                                    return;
+                                }
+                                const reader = new FileReader();
+                                reader.onload = (e) => setUploadedImage(e.target.result);
+                                reader.readAsDataURL(file);
+                            };
+
                             const bgPresets = {
                                 dark: { bgPrimary: '#0a0f0a', bgCard: 'linear-gradient(135deg, #0f1a0f 0%, #142014 100%)', border: '#1a3a1a', textPrimary: '#e8f5e9', textMuted: '#81c784', isLight: false },
                                 light: { bgPrimary: '#f5f6fa', bgCard: 'linear-gradient(135deg, #ffffff 0%, #f0f2f8 100%)', border: '#d1d5db', textPrimary: '#1a1a2e', textMuted: '#64748b', isLight: true },
@@ -1246,7 +1271,11 @@
                             };
 
                             const bg = bgPresets[bgMode];
-                            const preview = { ...bg, accent, accentBlue: secondary, logo: '', logoEmoji: '', label: name || 'Custom Theme' };
+                            const customLogo = logoMode === 'emoji' ? { type: 'emoji', value: selectedEmoji }
+                                : logoMode === 'image' && uploadedImage ? { type: 'image', value: uploadedImage }
+                                : logoMode === 'none' ? { type: 'none', value: null }
+                                : { type: 'emoji', value: '📊' };
+                            const preview = { ...bg, accent, accentBlue: secondary, logo: '', logoEmoji: '', customLogo, label: name || 'Custom Theme' };
 
                             const handleSave = () => {
                                 if (!name.trim()) return;
@@ -1329,10 +1358,68 @@
                                                     {Object.entries(FONT_OPTIONS).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
                                                 </select>
                                             </div>
+                                            {/* Logo */}
+                                            <div>
+                                                <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'6px' }}>Logo</label>
+                                                <div style={{ display:'flex', gap:'6px', marginBottom:'10px' }}>
+                                                    {[{key:'emoji',label:'Emoji'},{key:'image',label:'Upload Image'},{key:'none',label:'None'}].map(m => (
+                                                        <button key={m.key} onClick={() => { setLogoMode(m.key); setUploadError(null); }}
+                                                            style={{ flex:1, padding:'7px 4px', borderRadius:'6px', border:`2px solid ${logoMode===m.key ? 'var(--accent)' : 'var(--border)'}`,
+                                                                background: logoMode===m.key ? 'rgba(0,212,255,0.1)' : 'transparent', color:'var(--text-primary)', cursor:'pointer', fontSize:'11px', fontWeight: logoMode===m.key ? 700 : 400 }}>
+                                                            {m.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                {logoMode === 'emoji' && (
+                                                    <div style={{ display:'grid', gridTemplateColumns:'repeat(10, 1fr)', gap:'4px' }}>
+                                                        {EMOJI_GRID.map(em => (
+                                                            <button key={em} onClick={() => setSelectedEmoji(em)}
+                                                                style={{ fontSize:'20px', padding:'4px', borderRadius:'6px', border:`2px solid ${selectedEmoji===em ? 'var(--accent)' : 'transparent'}`,
+                                                                    background: selectedEmoji===em ? 'rgba(0,212,255,0.15)' : 'transparent', cursor:'pointer', lineHeight:1 }}>
+                                                                {em}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {logoMode === 'image' && (
+                                                    <div>
+                                                        {!uploadedImage ? (
+                                                            <div
+                                                                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                                                                onDragLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
+                                                                onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--border)'; handleImageUpload(e.dataTransfer.files[0]); }}
+                                                                onClick={() => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/gif'; inp.onchange = (ev) => handleImageUpload(ev.target.files[0]); inp.click(); }}
+                                                                style={{ border:'2px dashed var(--border)', borderRadius:'8px', padding:'20px', textAlign:'center', cursor:'pointer', color:'var(--text-muted)', fontSize:'12px', transition:'border-color 0.2s' }}>
+                                                                Drop image here or click to browse
+                                                                <div style={{ fontSize:'10px', marginTop:'4px', opacity:0.7 }}>PNG, JPG, or GIF &middot; Max 100KB</div>
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{ display:'flex', alignItems:'center', gap:'12px' }}>
+                                                                <img src={uploadedImage} alt="Logo" style={{ width:'48px', height:'48px', objectFit:'cover', borderRadius:'8px', border:'1px solid var(--border)' }}
+                                                                    onError={e => { setUploadedImage(null); setUploadError('Image failed to load.'); }} />
+                                                                <button onClick={() => setUploadedImage(null)}
+                                                                    style={{ background:'none', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer', fontSize:'11px', padding:'4px 10px' }}>
+                                                                    Remove
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                        {uploadError && <div style={{ color:'var(--negative, #ef4444)', fontSize:'11px', marginTop:'6px' }}>{uploadError}</div>}
+                                                    </div>
+                                                )}
+                                                {logoMode === 'none' && (
+                                                    <div style={{ color:'var(--text-muted)', fontSize:'12px', fontStyle:'italic', padding:'4px 0' }}>(no logo — header will show site name only)</div>
+                                                )}
+                                            </div>
                                             {/* Live Preview */}
                                             <div>
                                                 <label style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', display:'block', marginBottom:'8px' }}>Preview</label>
                                                 <div style={{ background:preview.bgPrimary, borderRadius:'8px', padding:'12px', border:`1px solid ${preview.border}` }}>
+                                                    {/* Mini header preview */}
+                                                    <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'10px', paddingBottom:'8px', borderBottom:`1px solid ${preview.border}` }}>
+                                                        {customLogo.type === 'emoji' && <span style={{ fontSize:'24px' }}>{customLogo.value}</span>}
+                                                        {customLogo.type === 'image' && customLogo.value && <img src={customLogo.value} alt="" style={{ width:'32px', height:'32px', objectFit:'cover', borderRadius:'8px' }} onError={e => { e.target.style.display = 'none'; }} />}
+                                                        <span style={{ fontFamily:'Oswald', fontSize:'16px', fontWeight:700, color:preview.textPrimary }}>WheelHouse</span>
+                                                    </div>
                                                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'8px' }}>
                                                         <div style={{ background:preview.bgCard, border:`1px solid ${preview.border}`, borderRadius:'6px', padding:'8px' }}>
                                                             <div style={{ fontSize:'9px', color:preview.textMuted, textTransform:'uppercase' }}>Portfolio</div>
@@ -1386,13 +1473,23 @@
 
                     <div className="header-top">
                         <div className="header-title" style={{display:"flex",alignItems:"center",gap:"14px"}}>
-                            <span style={{ cursor: theme.logo ? 'pointer' : 'default' }} onClick={() => theme.logo && setLogoLightbox(true)}>
-                            {theme.logo && theme.logoCircle && <img src={theme.logo} alt="" style={{width:"48px",height:"48px",objectFit:"cover",objectPosition:"top",borderRadius:"50%",border:"2px solid var(--accent)"}} />}
-                            {theme.logo && !theme.logoCircle && <img src={theme.logo} alt="" style={{width:"48px",height:"48px",objectFit:"contain"}} />}
-                            {!theme.logo && theme.logoText && <span style={{fontFamily:'Oswald',fontSize:'22px',fontWeight:700,color:'var(--accent)',background:'var(--bg-card)',border:'2px solid var(--accent)',borderRadius:'8px',padding:'4px 10px',letterSpacing:'2px',lineHeight:1}}>{theme.logoText}</span>}
-                            {!theme.logo && !theme.logoText && theme.logoEmoji && <span style={theme.logoStyle || {fontSize:'36px'}}>{theme.logoEmoji}</span>}
-                            {!theme.logo && !theme.logoText && !theme.logoEmoji && <span style={{fontSize:'36px'}}>💰</span>}
-                            </span>
+                            {(() => {
+                                const cl = theme.customLogo;
+                                if (cl) {
+                                    if (cl.type === 'none') return null;
+                                    if (cl.type === 'image' && cl.value) return <img src={cl.value} alt="" style={{width:"40px",height:"40px",objectFit:"cover",borderRadius:"8px"}} onError={e => { e.target.style.display = 'none'; }} />;
+                                    if (cl.type === 'emoji' && cl.value) return <span style={{fontSize:'36px'}}>{cl.value}</span>;
+                                }
+                                return (
+                                    <span style={{ cursor: theme.logo ? 'pointer' : 'default' }} onClick={() => theme.logo && setLogoLightbox(true)}>
+                                    {theme.logo && theme.logoCircle && <img src={theme.logo} alt="" style={{width:"48px",height:"48px",objectFit:"cover",objectPosition:"top",borderRadius:"50%",border:"2px solid var(--accent)"}} />}
+                                    {theme.logo && !theme.logoCircle && <img src={theme.logo} alt="" style={{width:"48px",height:"48px",objectFit:"contain"}} />}
+                                    {!theme.logo && theme.logoText && <span style={{fontFamily:'Oswald',fontSize:'22px',fontWeight:700,color:'var(--accent)',background:'var(--bg-card)',border:'2px solid var(--accent)',borderRadius:'8px',padding:'4px 10px',letterSpacing:'2px',lineHeight:1}}>{theme.logoText}</span>}
+                                    {!theme.logo && !theme.logoText && theme.logoEmoji && <span style={theme.logoStyle || {fontSize:'36px'}}>{theme.logoEmoji}</span>}
+                                    {!theme.logo && !theme.logoText && !theme.logoEmoji && <span style={{fontSize:'36px'}}>💰</span>}
+                                    </span>
+                                );
+                            })()}
                             <span>WheelHouse</span>
                         </div>
                         <div className="button-group" style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
