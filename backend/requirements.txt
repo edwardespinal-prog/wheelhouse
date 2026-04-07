@@ -1,0 +1,7 @@
+yfinance
+requests
+beautifulsoup4
+lxml
+pandas
+openpyxl
+fear-greed
