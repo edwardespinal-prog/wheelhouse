@@ -922,9 +922,7 @@
             const [taxRate, setTaxRate] = useState(30);
             const [fontKey, setFontKey] = useState(localStorage.getItem('wh-font') || 'inter');
             const [themeKey, setThemeKey] = useState(localStorage.getItem('wh-theme') || 'market');
-            const theme = allThemes[themeKey] || THEMES['market'];
             const [previewTheme, setPreviewTheme] = useState(null); // key of theme being previewed
-            const accent = theme.accent;
             const [logoLightbox, setLogoLightbox] = useState(false);
             const [data, setData] = useState({
                 summary: {},
@@ -958,6 +956,9 @@
                 });
                 return merged;
             }, [customThemes]);
+
+            const theme = allThemes[themeKey] || THEMES['market'];
+            const accent = theme.accent;
 
             // Fetch all data
             const fetchData = useCallback(async () => {
