@@ -1437,7 +1437,7 @@
                                 { label: 'CC Income', key: 'cc-income', config: 'cc_income' },
                                 { label: 'Cash Flow', key: 'cash-flow', config: null, feature: 'cash_flow_tracker' },
                                 { label: 'Dark Pool & Insiders', key: 'dark-pool-&-insiders', config: 'dark_pool_insiders' },
-                                { label: "Uncle Eddi3's", key: "uncle-eddi3's", config: 'uncle_eddies' },
+                                { label: "Resale Tracker", key: "uncle-eddi3's", config: 'uncle_eddies' },
                             ];
                             const visibleTabs = allTabs.filter(t => {
                                 if (t.config && tc[t.config] === false) return false;
@@ -1764,7 +1764,7 @@
                             </div>
                         </div>
                         <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => onNavigate("uncle-eddi3's")}>
-                            <div className="stat-label">Uncle Eddi3's (2026 YTD)</div>
+                            <div className="stat-label">Resale Tracker (2026 YTD)</div>
                             <div className="stat-value" style={{ color: salesNet >= 0 ? '#10b981' : '#ef4444' }}>
                                 {salesNet >= 0 ? '+' : ''}{formatCurrency(salesNet)}
                             </div>
@@ -6525,7 +6525,7 @@
                         ...(itype === 'sneaker' ? { colorway: formData.colorway || '' } : {}),
                     };
 
-                    // Items added from Uncle Eddi3's go to inventory (available), not collection
+                    // Items added from Resale Tracker go to inventory (available), not collection
                     if (!editingId && formData._addToInventory) {
                         payload.status = 'available';
                     }
@@ -6610,9 +6610,9 @@
                 return `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Complete=1&LH_Sold=1&_sop=13`;
             };
 
-            // Move card from Collection to Uncle Eddi3's inventory
+            // Move card from Collection to Resale Tracker inventory
             const handleMoveToInventory = async (card) => {
-                if (!window.confirm(`Move "${getItemName(card)}" to Uncle Eddi3's inventory?`)) return;
+                if (!window.confirm(`Move "${getItemName(card)}" to Resale Tracker inventory?`)) return;
                 try {
                     await fetch(`${API_BASE}/cards/${card.id}`, {
                         method: 'PUT', headers: {'Content-Type':'application/json'},
@@ -6620,7 +6620,7 @@
                     });
                     const updated = await fetch(`${API_BASE}/cards`).then(r => r.json());
                     onSetData(prev => ({ ...prev, cards: Array.isArray(updated) ? updated : [] }));
-                    onSetSuccess(`Moved to Uncle Eddi3's inventory`);
+                    onSetSuccess(`Moved to Resale Tracker inventory`);
                 } catch { onSetError('Failed to move item'); }
             };
 
@@ -6664,7 +6664,7 @@
                 <div>
                     {/* View Toggle */}
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                        {[{key:'collection',label:'My Collection'},{key:'eddies',label:"Uncle Eddi3's"},{key:'all',label:'All Items'}].map(v => (
+                        {[{key:'collection',label:'My Collection'},{key:'eddies',label:"Resale Tracker"},{key:'all',label:'All Items'}].map(v => (
                             <button key={v.key} onClick={() => setMainView(v.key)} style={{
                                 padding: '8px 18px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: mainView === v.key ? 700 : 400,
                                 border: mainView === v.key ? '2px solid var(--accent)' : '1px solid var(--border)',
@@ -6721,7 +6721,7 @@
                         <button className="button button-primary" onClick={handleAddEdit} style={{ width: '100%' }}>{editingId ? 'Update' : 'Add'}</button>
                     </Modal>
 
-                    {/* ─── Uncle Eddi3's View ─── */}
+                    {/* ─── Resale Tracker View ─── */}
                     {mainView === 'eddies' && (
                         <div>
                             {/* ── Active Inventory Section ── */}
@@ -7218,7 +7218,7 @@
                                                     <td>
                                                         <div className="action-buttons">
                                                             <button className="action-button" onClick={() => handleEdit(card)}>✏️</button>
-                                                            <button className="action-button" title="Move to Uncle Eddi3's" onClick={() => handleMoveToInventory(card)}>📦</button>
+                                                            <button className="action-button" title="Move to Resale Tracker" onClick={() => handleMoveToInventory(card)}>📦</button>
                                                             <a href={getEbayUrl(card)} target="_blank" rel="noopener noreferrer" className="action-button" title="View eBay Comps" style={{textDecoration:'none'}}>🔍</a>
                                                             <button className="action-button delete" onClick={() => handleDelete(card.id, getItemName(card))}>✕</button>
                                                         </div>
@@ -7273,7 +7273,7 @@
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
                                         <a href={getEbayUrl(card)} target="_blank" rel="noopener noreferrer" className="button" style={{ flex: 1, textAlign: 'center', textDecoration: 'none' }}>View Comps</a>
                                         <button className="action-button" onClick={() => handleEdit(card)}>✏️</button>
-                                        <button className="action-button" title="Move to Uncle Eddi3's" onClick={() => handleMoveToInventory(card)}>📦</button>
+                                        <button className="action-button" title="Move to Resale Tracker" onClick={() => handleMoveToInventory(card)}>📦</button>
                                         <button className="action-button delete" onClick={() => handleDelete(card.id, card.player)}>✕</button>
                                     </div>
                                 </div>
