@@ -7,14 +7,14 @@
     "sale_price": 62.00,
     "platform": "eBay",
     "platform_fee_pct": 13.25,
-    "platform_fee": 8.22,
+    "platform_fees": 8.22,
     "shipping_cost": 4.50,
-    "cogs": 15.00,
+    "purchase_price": 15.00,
     "net_profit": 34.28,
     "status": "completed",
-    "date_sold": "2025-02-10",
-    "date_shipped": "2025-02-12",
-    "date_completed": "2025-02-18"
+    "date_sold": "2026-02-10",
+    "date_shipped": "2026-02-12",
+    "date_completed": "2026-02-18"
   },
   {
     "id": 2,
@@ -24,13 +24,13 @@
     "sale_price": 285.00,
     "platform": "StockX",
     "platform_fee_pct": 10.0,
-    "platform_fee": 28.50,
+    "platform_fees": 28.50,
     "shipping_cost": 0,
-    "cogs": 170.00,
+    "purchase_price": 170.00,
     "net_profit": 86.50,
-    "status": "shipped",
-    "date_sold": "2025-03-20",
-    "date_shipped": "2025-03-22",
-    "date_completed": ""
+    "status": "completed",
+    "date_sold": "2026-03-20",
+    "date_shipped": "2026-03-22",
+    "date_completed": "2026-03-28"
   }
 ]

@@ -2,8 +2,8 @@
   {
     "id": 1,
     "ticker": "SOFI",
-    "date_opened": "2025-04-01",
-    "contract_details": "SOFI $12C 04/17/25",
+    "date_opened": "2026-01-15",
+    "contract_details": "SOFI $12C 04/17/26",
     "premium_collected": 84.00,
     "date_closed": "",
     "cost_to_close": 0,
@@ -13,8 +13,8 @@
   {
     "id": 2,
     "ticker": "AAPL",
-    "date_opened": "2025-03-15",
-    "contract_details": "AAPL $200C 06/20/25",
+    "date_opened": "2026-02-10",
+    "contract_details": "AAPL $200C 06/20/26",
     "premium_collected": 312.00,
     "date_closed": "",
     "cost_to_close": 0,
