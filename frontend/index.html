@@ -1061,18 +1061,28 @@
             }, [loading, showOnboarding]);
 
             // Tab tour trigger on tab switch
-            const TAB_TOUR_KEYS = { dashboard: 'dashboard', equities: 'equities', options: 'options', "wheeler's": 'wheelers', 'tax-ledger': 'taxLedger', watchlist: 'watchlist', 'cc-income': 'ccIncome', 'dark-pool-&-insiders': 'darkPool', crypto: 'crypto', news: 'news', "uncle-eddi3's": 'resaleTracker' };
+            const TAB_TOUR_KEYS = { equities: 'equities', options: 'options', "wheeler's": 'wheelers', 'tax-ledger': 'taxLedger', watchlist: 'watchlist', 'cc-income': 'ccIncome', 'dark-pool-&-insiders': 'darkPool', crypto: 'crypto', news: 'news', "uncle-eddi3's": 'resaleTracker', 'cash-flow': 'cashFlow' };
+            const TAB_TOUR_KEYS_ALL = { dashboard: 'dashboard', ...TAB_TOUR_KEYS }; // includes dashboard for manual re-launch
             useEffect(() => {
-                const tourKey = TAB_TOUR_KEYS[currentTab];
+                const tourKey = TAB_TOUR_KEYS[currentTab]; // dashboard excluded from auto-trigger
                 if (!tourKey || !TAB_TOURS[tourKey]) return;
                 const mainDone = localStorage.getItem('wh_tour_completed') === 'true';
                 const tabDone = localStorage.getItem(`wh_tour_${tourKey}_completed`) === 'true';
                 if (mainDone && !tabDone && !showTour && !activeTour && window.innerWidth >= 768) {
-                    const timer = setTimeout(() => {
-                        setTourStep(0);
-                        setActiveTour({ steps: TAB_TOURS[tourKey], name: tourKey, lsKey: `wh_tour_${tourKey}_completed` });
-                    }, 1000);
-                    return () => clearTimeout(timer);
+                    // Poll for target elements before launching (async content like Dark Pool)
+                    let attempts = 0;
+                    const maxAttempts = 10;
+                    const poll = setInterval(() => {
+                        attempts++;
+                        const steps = TAB_TOURS[tourKey];
+                        const firstTarget = document.querySelector(steps[0].target);
+                        if (firstTarget || attempts >= maxAttempts) {
+                            clearInterval(poll);
+                            setTourStep(0);
+                            setActiveTour({ steps, name: tourKey, lsKey: `wh_tour_${tourKey}_completed` });
+                        }
+                    }, 500);
+                    return () => clearInterval(poll);
                 }
             }, [currentTab, showTour, activeTour]);
 
@@ -1267,7 +1277,7 @@
                                                         style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 12px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px' }}>
                                                         Full Tour
                                                     </button>
-                                                    <button onClick={() => { const tk = TAB_TOUR_KEYS[currentTab]; if (tk && TAB_TOURS[tk]) { setShowSettings(false); setTourStep(0); setActiveTour({ steps: TAB_TOURS[tk], name: tk, lsKey: `wh_tour_${tk}_completed` }); } }}
+                                                    <button onClick={() => { const tk = TAB_TOUR_KEYS_ALL[currentTab]; if (tk && TAB_TOURS[tk]) { setShowSettings(false); setTourStep(0); setActiveTour({ steps: TAB_TOURS[tk], name: tk, lsKey: `wh_tour_${tk}_completed` }); } }}
                                                         style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 12px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px' }}>
                                                         Tour This Tab
                                                     </button>
@@ -1680,9 +1690,29 @@
                             <button data-tour="settings-gear" onClick={() => setShowSettings(true)}
                                 style={{ padding:'4px 6px', fontSize:'14px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer', lineHeight:1 }}
                                 title="Settings">&#9881;</button>
-                            <button onClick={() => { setTourStep(0); setShowTour(true); }}
-                                style={{ padding:'4px 6px', fontSize:'13px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer', lineHeight:1 }}
-                                title="Take the tour">&#10068;</button>
+                            {(() => {
+                                const [tourMenuOpen, setTourMenuOpen] = useState(false);
+                                return (
+                                    <div style={{ position:'relative' }}>
+                                        <button onClick={() => setTourMenuOpen(!tourMenuOpen)}
+                                            style={{ padding:'3px 8px', fontSize:'11px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
+                                            &#127919; Tour
+                                        </button>
+                                        {tourMenuOpen && (
+                                            <div style={{ position:'absolute', top:'100%', right:0, marginTop:'4px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'6px', boxShadow:'0 8px 24px rgba(0,0,0,0.4)', zIndex:100, minWidth:'160px', overflow:'hidden' }}>
+                                                <button onClick={() => { setTourMenuOpen(false); setTourStep(0); setShowTour(true); }}
+                                                    style={{ display:'block', width:'100%', padding:'8px 14px', background:'none', border:'none', borderBottom:'1px solid var(--border)', color:'var(--text-primary)', cursor:'pointer', fontSize:'12px', textAlign:'left' }}>
+                                                    Full Tour (12 steps)
+                                                </button>
+                                                <button onClick={() => { setTourMenuOpen(false); const tk = TAB_TOUR_KEYS_ALL[currentTab]; if (tk && TAB_TOURS[tk]) { setTourStep(0); setActiveTour({ steps: TAB_TOURS[tk], name: tk, lsKey: `wh_tour_${tk}_completed` }); } }}
+                                                    style={{ display:'block', width:'100%', padding:'8px 14px', background:'none', border:'none', color:'var(--text-primary)', cursor:'pointer', fontSize:'12px', textAlign:'left' }}>
+                                                    Tour This Tab
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                             <button onClick={() => setShowDemoConfirm(true)}
                                 style={{ padding:'4px 8px', fontSize:'10px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}
                                 title="Load sample demo data">Demo
@@ -1825,6 +1855,7 @@
             wheelers: [
                 { target: '[data-tour="wheeler-search"]', title: 'Analyze Any Ticker', description: 'Enter a ticker to pull up the full wheel analysis — premium yields, scorecard, and multi-cycle simulations.', position: 'bottom' },
                 { target: '[data-tour="active-wheels"]', title: 'Active Wheels', description: 'Auto-detects your open CCs and CSPs. Exit Intelligence gives you a signal: CLOSE, ROLL, or HOLD.', position: 'top' },
+                { target: '[data-tour="wheel-simulator"]', title: 'Scenario Simulator', description: 'Project multi-cycle wheel returns over 3, 6, or 12 months. See best case, expected, and worst case outcomes with assignment probability.', position: 'top' },
             ],
             taxLedger: [
                 { target: '[data-tour="tax-ytd-toggle"]', title: 'YTD Filter', description: 'Filter to current year realized gains only. Your estimated tax reserve auto-calculates based on short-term and long-term rates.', position: 'bottom' },
@@ -1854,30 +1885,42 @@
                 { target: '[data-tour="news-sentiment"]', title: 'Sentiment Analysis', description: 'Each article tagged bullish, bearish, or neutral. Sentiment summary shows the overall tone across your portfolio.', position: 'bottom' },
             ],
             resaleTracker: [
-                { target: '[data-tour="resale-views"]', title: 'Collection & Inventory', description: 'Toggle between My Collection (personal items) and Active Inventory (items for sale). Track across eBay, StockX, and more.', position: 'bottom' },
-                { target: '[data-tour="resale-sales"]', title: 'Sales Ledger', description: 'Track every sale: sold, shipped, completed. Platform fees auto-calculated. Import eBay transactions via CSV.', position: 'top' },
+                { target: '[data-tour="resale-views"]', title: 'Collection & Inventory', description: 'Toggle between My Collection, Resale Tracker (active inventory), and All Items. Track across eBay, StockX, and more.', position: 'bottom' },
+            ],
+            cashFlow: [
+                { target: '[data-tour="cashflow-add"]', title: 'Log Cash Flows', description: 'Record deposits, withdrawals, and transfers. Cash balance updates automatically with every trade and CC premium.', position: 'bottom' },
+                { target: '[data-tour="cashflow-ledger"]', title: 'Cash Flow Ledger', description: 'Full history of cash movements — deposits, withdrawals, premiums collected, and trade proceeds.', position: 'top' },
             ],
         };
 
         const TourOverlay = ({ steps, currentStep, onNext, onBack, onSkip }) => {
             const [rect, setRect] = useState(null);
             const step = steps[currentStep];
+            const onNextRef = React.useRef(onNext);
+            onNextRef.current = onNext;
 
             useEffect(() => {
                 if (!step) return;
-                const findAndPosition = () => {
+                setRect(null);
+                let cancelled = false;
+                const findAndPosition = (retries = 0) => {
+                    if (cancelled) return;
                     const el = document.querySelector(step.target);
-                    if (!el) { onNext(); return; }
+                    if (!el) {
+                        if (retries < 3) { setTimeout(() => findAndPosition(retries + 1), 300); return; }
+                        onNextRef.current(); return;
+                    }
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     setTimeout(() => {
+                        if (cancelled) return;
                         const r = el.getBoundingClientRect();
                         setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
                     }, 350);
                 };
                 findAndPosition();
-                const handleResize = () => findAndPosition();
+                const handleResize = () => { if (!cancelled) findAndPosition(); };
                 window.addEventListener('resize', handleResize);
-                return () => window.removeEventListener('resize', handleResize);
+                return () => { cancelled = true; window.removeEventListener('resize', handleResize); };
             }, [currentStep, step]);
 
             useEffect(() => {
@@ -5296,7 +5339,7 @@
             const compound = simResult?.compound_projection || {};
 
             return (
-                <div style={{ marginTop: '32px' }}>
+                <div data-tour="wheel-simulator" style={{ marginTop: '32px' }}>
                     <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
                         <h3 style={{ color: '#00d4ff', fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Scenario Simulator</h3>
 
@@ -7956,7 +7999,7 @@
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-                        <button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ date: new Date().toISOString().slice(0, 10), type: 'deposit', amount: '', description: '' }); }}
+                        <button data-tour="cashflow-add" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ date: new Date().toISOString().slice(0, 10), type: 'deposit', amount: '', description: '' }); }}
                             style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontFamily: 'Oswald', fontSize: '14px' }}>
                             {showForm ? 'Cancel' : '+ Add Cash Flow'}
                         </button>
@@ -8008,7 +8051,7 @@
                         const depTotal = filtered.filter(e => e.type === 'deposit').reduce((s, e) => s + e.amount, 0);
                         const wdTotal = filtered.filter(e => e.type === 'withdrawal').reduce((s, e) => s + e.amount, 0);
                         return (
-                        <div className="card" style={{ marginBottom: '24px' }}>
+                        <div data-tour="cashflow-ledger" className="card" style={{ marginBottom: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: cashCollapsed ? 0 : '12px' }}
                                 onClick={() => setCashCollapsed(!cashCollapsed)}>
                                 <h3 style={{ fontFamily: 'Oswald', fontSize: '16px', color: 'var(--accent)' }}>
