@@ -1833,7 +1833,7 @@
 
         // Tour Steps & Overlay
         const TOUR_STEPS = [
-            { target: '[data-tour="dashboard-overview"]', title: 'Your Command Center', description: 'Everything updates in real time. Portfolio value, P/L, benchmarks, and market sentiment — all at a glance.', position: 'bottom' },
+            { target: '[data-tour="dashboard-overview"]', title: 'Your Command Center', description: 'Everything updates in real time. Portfolio value, P/L, benchmarks, and market sentiment — all at a glance.', position: 'center' },
             { target: '[data-tour="portfolio-value"]', title: 'Portfolio Total Value', description: 'Your total portfolio value: equities + options + crypto + cash. Updates every 5 minutes or on manual refresh.', position: 'bottom' },
             { target: '[data-tour="performance-chart"]', title: 'Performance Over Time', description: 'Track your portfolio performance. Toggle between Live, 1D, 1W, 1M, 3M, YTD, and 1Y views.', position: 'top' },
             { target: '[data-tour="fear-greed"]', title: 'Market Sentiment', description: 'Fear & Greed gauges for equity and crypto markets. Extreme fear often means buying opportunities.', position: 'bottom' },
@@ -1894,9 +1894,9 @@
             darkPool: [
                 { target: '[data-tour="dp-portfolio-cards"]', title: 'Portfolio Overview', description: 'Short ratio and 10-day sparklines for every position. Red cards mean high institutional short volume — worth watching.', position: 'bottom' },
                 { target: '[data-tour="dp-search"]', title: 'Search Any Ticker', description: 'Not just your portfolio — search any ticker to check its dark pool short volume and insider activity.', position: 'bottom' },
-                { target: '[data-tour="dp-first-card"]', title: 'Dive Into Any Ticker', description: 'Click any portfolio card to expand it. See daily short volumes, options flow with put/call ratios, and recent insider transactions — drill down into the data behind the signals.', position: 'bottom',
-                    onEnter: () => { const c = document.querySelector('[data-tour="dp-first-card"]'); if (c) c.click(); },
-                    onExit: () => { const back = document.querySelector('[data-tour="dp-portfolio-cards"]'); if (back) { /* Dark pool uses view switch, click back button */ const btn = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Back to Portfolio')); if (btn) btn.click(); } }
+                { target: '[data-tour="dp-detail-view"]', title: 'Dive Into Any Ticker', description: 'Click any portfolio card to see daily short volumes, options flow with put/call ratios, and recent insider transactions — the full picture behind the signals.', position: 'center',
+                    onEnter: () => { const c = document.querySelector('[data-tour="dp-first-card"]'); if (c) c.click(); setTimeout(() => window.dispatchEvent(new Event('resize')), 800); },
+                    onExit: () => { const btn = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Back')); if (btn) btn.click(); }
                 },
             ],
             crypto: [
@@ -1945,8 +1945,14 @@
                     setTimeout(() => {
                         if (cancelled) return;
                         const r = el.getBoundingClientRect();
-                        setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
-                    }, 350);
+                        // Fallback: if element has no size, use viewport center
+                        if (r.width === 0 && r.height === 0) {
+                            const vw = window.innerWidth, vh = document.documentElement.clientHeight;
+                            setRect({ top: vh * 0.15, left: vw * 0.1, width: vw * 0.8, height: 60 });
+                        } else {
+                            setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
+                        }
+                    }, 400);
                 };
                 // Poll for target element (handles onEnter async DOM changes)
                 const maxWait = step.onEnter ? 2000 : 900;
@@ -1984,19 +1990,22 @@
             const tipW = isMobile ? Math.min(320, vw - 32) : 320;
             const tipH = 140;
             let tipTop, tipLeft;
-            if (isMobile) {
-                // Mobile: always below spotlight, centered horizontally
+            const pos = step.position || 'bottom';
+            if (pos === 'center') {
+                // Centered on screen — for overview/welcome steps
+                tipTop = Math.max(vh * 0.12, 60);
+                tipLeft = (vw - tipW) / 2;
+            } else if (isMobile) {
                 tipTop = rect.top + rect.height + pad + 12;
                 tipLeft = (vw - tipW) / 2;
             } else {
-                const pos = step.position || 'bottom';
                 if (pos === 'bottom') { tipTop = rect.top + rect.height + pad + 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
                 else if (pos === 'top') { tipTop = rect.top - tipH - pad - 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
                 else if (pos === 'left') { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left - tipW - pad - 12; }
                 else { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left + rect.width + pad + 12; }
             }
-            tipLeft = Math.max(8, Math.min(tipLeft, vw - tipW - 8));
-            tipTop = Math.max(8, Math.min(tipTop, vh - tipH - 8));
+            tipLeft = Math.max(16, Math.min(tipLeft, vw - tipW - 16));
+            tipTop = Math.max(16, Math.min(tipTop, vh - tipH - 16));
 
             return (
                 <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:10002 }}>
@@ -6702,7 +6711,7 @@
 
             // Single Ticker Detail View
             return (
-                <div>
+                <div data-tour="dp-detail-view">
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
                         <button className="button button-primary" onClick={() => { setView('portfolio'); setSelectedTicker(null); setDetailTab('darkpool'); }}>
                             ← Back
