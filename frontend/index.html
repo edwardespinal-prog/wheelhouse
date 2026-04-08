@@ -964,7 +964,7 @@
             const [showSettings, setShowSettings] = useState(false);
             const [tourStep, setTourStep] = useState(0);
             const [activeTour, setActiveTour] = useState(null); // {steps, name, lsKey}
-            const startMainTour = () => { setTourStep(0); setActiveTour({ steps: TOUR_STEPS, name: 'main', lsKey: 'wh_tour_completed' }); };
+            const startMainTour = () => { setCurrentTab('dashboard'); setTourStep(0); setActiveTour({ steps: TOUR_STEPS, name: 'main', lsKey: 'wh_tour_completed' }); };
             const startTabTour = (tourKey) => { if (TAB_TOURS[tourKey]) { setTourStep(0); setActiveTour({ steps: TAB_TOURS[tourKey], name: tourKey, lsKey: `wh_tour_${tourKey}_completed` }); } };
             const [customThemes, setCustomThemes] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('wheelhouse_custom_themes') || '[]'); } catch { return []; }
@@ -1220,8 +1220,8 @@
 
                     {/* Guided Tour (unified — main + tab tours both use activeTour) */}
                     {activeTour && <TourOverlay steps={activeTour.steps} currentStep={tourStep}
-                        onNext={() => { if (tourStep >= activeTour.steps.length - 1) { localStorage.setItem(activeTour.lsKey, 'true'); setActiveTour(null); setTourStep(0); } else { setTourStep(tourStep + 1); } }}
-                        onBack={() => setTourStep(Math.max(0, tourStep - 1))}
+                        onNext={() => { setTourStep(prev => { if (prev >= activeTour.steps.length - 1) { localStorage.setItem(activeTour.lsKey, 'true'); setActiveTour(null); return 0; } return prev + 1; }); }}
+                        onBack={() => setTourStep(prev => Math.max(0, prev - 1))}
                         onSkip={() => { localStorage.setItem(activeTour.lsKey, 'true'); setActiveTour(null); setTourStep(0); }} />}
 
                     {/* Settings Modal */}
@@ -1940,13 +1940,7 @@
 
                 setRect(null);
                 let cancelled = false;
-                const findAndPosition = (retries = 0) => {
-                    if (cancelled) return;
-                    const el = document.querySelector(step.target);
-                    if (!el) {
-                        if (retries < 3) { setTimeout(() => findAndPosition(retries + 1), 300); return; }
-                        onNextRef.current(); return;
-                    }
+                const positionOn = (el) => {
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     setTimeout(() => {
                         if (cancelled) return;
@@ -1954,10 +1948,18 @@
                         setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
                     }, 350);
                 };
-                // Delay slightly for onEnter DOM changes to take effect
-                const delay = step.onEnter ? 400 : 0;
-                setTimeout(() => findAndPosition(), delay);
-                const handleResize = () => { if (!cancelled) findAndPosition(); };
+                // Poll for target element (handles onEnter async DOM changes)
+                const maxWait = step.onEnter ? 2000 : 900;
+                const start = Date.now();
+                const poll = () => {
+                    if (cancelled) return;
+                    const el = document.querySelector(step.target);
+                    if (el) { positionOn(el); return; }
+                    if (Date.now() - start < maxWait) { setTimeout(poll, 100); return; }
+                    onNextRef.current(); // skip if target never appeared
+                };
+                poll();
+                const handleResize = () => { if (!cancelled) { const el = document.querySelector(step.target); if (el) positionOn(el); } };
                 window.addEventListener('resize', handleResize);
                 return () => { cancelled = true; window.removeEventListener('resize', handleResize); };
             }, [currentStep, step]);
@@ -1975,16 +1977,26 @@
 
             if (!step || !rect) return null;
 
+            const vw = window.innerWidth;
+            const vh = document.documentElement.clientHeight;
+            const isMobile = vw < 768;
             const pad = 4;
-            const tipW = 320, tipH = 140;
+            const tipW = isMobile ? Math.min(320, vw - 32) : 320;
+            const tipH = 140;
             let tipTop, tipLeft;
-            const pos = step.position || 'bottom';
-            if (pos === 'bottom') { tipTop = rect.top + rect.height + pad + 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
-            else if (pos === 'top') { tipTop = rect.top - tipH - pad - 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
-            else if (pos === 'left') { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left - tipW - pad - 12; }
-            else { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left + rect.width + pad + 12; }
-            tipLeft = Math.max(8, Math.min(tipLeft, window.innerWidth - tipW - 8));
-            tipTop = Math.max(8, Math.min(tipTop, window.innerHeight - tipH - 8));
+            if (isMobile) {
+                // Mobile: always below spotlight, centered horizontally
+                tipTop = rect.top + rect.height + pad + 12;
+                tipLeft = (vw - tipW) / 2;
+            } else {
+                const pos = step.position || 'bottom';
+                if (pos === 'bottom') { tipTop = rect.top + rect.height + pad + 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
+                else if (pos === 'top') { tipTop = rect.top - tipH - pad - 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
+                else if (pos === 'left') { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left - tipW - pad - 12; }
+                else { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left + rect.width + pad + 12; }
+            }
+            tipLeft = Math.max(8, Math.min(tipLeft, vw - tipW - 8));
+            tipTop = Math.max(8, Math.min(tipTop, vh - tipH - 8));
 
             return (
                 <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:10002 }}>
