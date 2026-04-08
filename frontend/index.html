@@ -1063,7 +1063,7 @@
             }, [loading, showOnboarding]);
 
             // Tab tour trigger on tab switch
-            const TAB_TOUR_KEYS = { equities: 'equities', options: 'options', "wheeler's": 'wheelers', 'tax-ledger': 'taxLedger', watchlist: 'watchlist', 'cc-income': 'ccIncome', 'dark-pool-&-insiders': 'darkPool', crypto: 'crypto', news: 'news', "uncle-eddi3's": 'resaleTracker', 'cash-flow': 'cashFlow' };
+            const TAB_TOUR_KEYS = { risk: 'risk', equities: 'equities', options: 'options', "wheeler's": 'wheelers', 'tax-ledger': 'taxLedger', watchlist: 'watchlist', 'cc-income': 'ccIncome', 'dark-pool-&-insiders': 'darkPool', crypto: 'crypto', news: 'news', "uncle-eddi3's": 'resaleTracker', 'cash-flow': 'cashFlow' };
             const TAB_TOUR_KEYS_ALL = { dashboard: 'dashboard', ...TAB_TOUR_KEYS }; // includes dashboard for manual re-launch
             useEffect(() => {
                 if (activeTour) return; // don't trigger if any tour is running
@@ -1874,9 +1874,18 @@
                 { target: '[data-tour="tax-open-closed"]', title: 'Open vs Closed', description: 'Switch between open positions (unrealized) and closed trades (realized P/L). Closed trades show date sold and proceeds.', position: 'bottom' },
                 { target: '[data-tour="tax-summary"]', title: 'Tax Summary', description: 'Realized P/L, tax reserve, and short-term vs long-term breakdown at a glance.', position: 'bottom' },
             ],
+            risk: [
+                { target: '[data-tour="risk-concentration"]', title: 'Concentration Analysis', description: 'See how your portfolio is distributed. Click any slice to navigate to that position. Alerts flag when any single position exceeds 20%.', position: 'bottom' },
+                { target: '[data-tour="risk-beta"]', title: 'Beta & Sector Exposure', description: 'Your portfolio\'s market sensitivity and sector breakdown. High beta means bigger swings on market moves.', position: 'bottom' },
+                { target: '[data-tour="risk-options"]', title: 'Options At-Risk', description: 'Positions approaching expiry, assignment risk, or significant loss — each with two actionable recommendations.', position: 'top' },
+            ],
             watchlist: [
                 { target: '[data-tour="watchlist-add"]', title: 'Track a Ticker', description: 'Add a ticker with a target buy price and notes. Distance-from-target shows how close it is to your entry point.', position: 'bottom' },
                 { target: '[data-tour="watchlist-alerts"]', title: 'Smart Alerts', description: 'Alerts fire automatically: price target hits, dark pool short ratio spikes, insider buying detected, and ETF flow regime changes.', position: 'bottom' },
+                { target: '[data-tour="watchlist-first-card"]', title: 'Expand for Deep Dive', description: 'Click any watchlist card to expand it inline. See the price chart, dark pool short volume, options flow, and insider activity — all without leaving the Watchlist tab.', position: 'bottom',
+                    onEnter: () => { const c = document.querySelector('[data-tour="watchlist-first-card"] > div[style*="cursor: pointer"], [data-tour="watchlist-first-card"] > div[style*="cursor"]'); if (c) c.click(); },
+                    onExit: () => { const c = document.querySelector('[data-tour="watchlist-first-card"] > div[style*="cursor: pointer"], [data-tour="watchlist-first-card"] > div[style*="cursor"]'); if (c) c.click(); }
+                },
             ],
             ccIncome: [
                 { target: '[data-tour="add-cc-btn"]', title: 'Log CC Premium', description: 'Log covered call premium collected. This automatically adds to your cash balance, matching how your brokerage handles it.', position: 'bottom' },
@@ -1885,6 +1894,10 @@
             darkPool: [
                 { target: '[data-tour="dp-portfolio-cards"]', title: 'Portfolio Overview', description: 'Short ratio and 10-day sparklines for every position. Red cards mean high institutional short volume — worth watching.', position: 'bottom' },
                 { target: '[data-tour="dp-search"]', title: 'Search Any Ticker', description: 'Not just your portfolio — search any ticker to check its dark pool short volume and insider activity.', position: 'bottom' },
+                { target: '[data-tour="dp-first-card"]', title: 'Dive Into Any Ticker', description: 'Click any portfolio card to expand it. See daily short volumes, options flow with put/call ratios, and recent insider transactions — drill down into the data behind the signals.', position: 'bottom',
+                    onEnter: () => { const c = document.querySelector('[data-tour="dp-first-card"]'); if (c) c.click(); },
+                    onExit: () => { const back = document.querySelector('[data-tour="dp-portfolio-cards"]'); if (back) { /* Dark pool uses view switch, click back button */ const btn = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Back to Portfolio')); if (btn) btn.click(); } }
+                },
             ],
             crypto: [
                 { target: '[data-tour="crypto-positions"]', title: 'Crypto Holdings', description: 'Your crypto positions with live pricing, cost basis, and unrealized P/L.', position: 'bottom' },
@@ -1903,6 +1916,10 @@
                 { target: '[data-tour="cashflow-add"]', title: 'Log Cash Flows', description: 'Record deposits, withdrawals, and transfers. Cash balance updates automatically with every trade and CC premium.', position: 'bottom' },
                 { target: '[data-tour="cashflow-summary"]', title: 'Cash Flow Summary', description: 'Capital Deployed, Capital Received, and Net Cash Flow — see exactly how much you\'ve put in vs taken out of your portfolio.', position: 'bottom' },
                 { target: '[data-tour="cashflow-chart"]', title: 'Cash Flow Over Time', description: 'Toggle between 1W, 1M, 3M, 6M, and Max to see your cumulative deposits and withdrawals over any time period.', position: 'top' },
+                { target: '[data-tour="cashflow-breakdown"]', title: 'Every Transaction, One Place', description: 'Every buy, sell, premium collected, and dividend flows here automatically. Expand any date to see individual transactions. Sortable by date or amount.', position: 'top',
+                    onEnter: () => { const row = document.querySelector('[data-tour="cashflow-breakdown"] tbody tr'); if (row) row.click(); },
+                    onExit: () => { const row = document.querySelector('[data-tour="cashflow-breakdown"] tbody tr'); if (row) row.click(); }
+                },
             ],
         };
 
@@ -1911,9 +1928,16 @@
             const step = steps[currentStep];
             const onNextRef = React.useRef(onNext);
             onNextRef.current = onNext;
+            const prevStepRef = React.useRef(null);
 
             useEffect(() => {
                 if (!step) return;
+                // Run onExit for previous step
+                if (prevStepRef.current?.onExit) { try { prevStepRef.current.onExit(); } catch(e) {} }
+                // Run onEnter for current step
+                if (step.onEnter) { try { step.onEnter(); } catch(e) {} }
+                prevStepRef.current = step;
+
                 setRect(null);
                 let cancelled = false;
                 const findAndPosition = (retries = 0) => {
@@ -1930,7 +1954,9 @@
                         setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
                     }, 350);
                 };
-                findAndPosition();
+                // Delay slightly for onEnter DOM changes to take effect
+                const delay = step.onEnter ? 400 : 0;
+                setTimeout(() => findAndPosition(), delay);
                 const handleResize = () => { if (!cancelled) findAndPosition(); };
                 window.addEventListener('resize', handleResize);
                 return () => { cancelled = true; window.removeEventListener('resize', handleResize); };
@@ -1941,6 +1967,11 @@
                 window.addEventListener('keydown', handleKey);
                 return () => window.removeEventListener('keydown', handleKey);
             }, [onSkip]);
+
+            // Cleanup: run onExit for current step when tour ends (unmount)
+            useEffect(() => {
+                return () => { if (prevStepRef.current?.onExit) { try { prevStepRef.current.onExit(); } catch(e) {} } };
+            }, []);
 
             if (!step || !rect) return null;
 
@@ -2678,7 +2709,7 @@
                     {/* Concentration + Beta row */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                         {/* Concentration Pie Chart */}
-                        <div className="card">
+                        <div data-tour="risk-concentration" className="card">
                             <h3 style={{ fontFamily: 'Oswald', fontSize: '16px', color: 'var(--accent)', marginBottom: '4px' }}>Concentration</h3>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>Top 5 = {concentration.top5_pct}% | HHI = {concentration.hhi}</div>
                             {(() => {
@@ -2729,7 +2760,7 @@
                         </div>
 
                         {/* Beta Exposure */}
-                        <div className="card">
+                        <div data-tour="risk-beta" className="card">
                             <h3 style={{ fontFamily: 'Oswald', fontSize: '16px', color: 'var(--accent)', marginBottom: '12px' }}>Beta Exposure</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div className="stat-card" title="Portfolio Beta measures overall market sensitivity.\n\nCalculated as the weighted average of each position's beta, where weights are based on market value.\n\nBeta = 1.0 means moves with the market.\nBeta > 1.0 means more volatile than the market.\nBeta < 1.0 means less volatile.\n\nFormula: Σ (position_weight × position_beta) for all positions." style={{ cursor: 'help' }}>
@@ -2805,7 +2836,7 @@
                     </div>
 
                     {/* Options At-Risk */}
-                    <div className="card">
+                    <div data-tour="risk-options" className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                             <h3 style={{ fontFamily: 'Oswald', fontSize: '16px', color: 'var(--accent)' }}>Options At-Risk</h3>
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -4583,13 +4614,13 @@
                             </div>
                         ) : (
                             <div style={{ display: 'grid', gridTemplateColumns: expandedTicker ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-                                {watchlist.map(item => {
+                                {watchlist.map((item, _wi) => {
                                     const atTarget = item.at_target;
                                     const aboveTarget = item.distance_pct > 0;
                                     const isExpanded = expandedTicker === item.ticker;
                                     const detail = expandedData[item.ticker];
                                     return (
-                                        <div key={item.id} className="card" style={{
+                                        <div key={item.id} data-tour={_wi === 0 ? 'watchlist-first-card' : undefined} className="card" style={{
                                             borderLeft: atTarget ? '3px solid #10b981' : '3px solid var(--border)',
                                             transition: 'border-color 0.2s'
                                         }}>
@@ -6601,8 +6632,8 @@
                             ) : null;
                         })()}
                         <div data-tour="dp-portfolio-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                            {sortedTickers.map(item => (
-                                <div key={item.ticker} className="card" onClick={() => loadTickerDetail(item.ticker)}
+                            {sortedTickers.map((item, _dpi) => (
+                                <div key={item.ticker} data-tour={_dpi === 0 ? 'dp-first-card' : undefined} className="card" onClick={() => loadTickerDetail(item.ticker)}
                                     style={{ cursor: 'pointer', transition: 'border-color 0.2s', borderColor: 'transparent' }}
                                     onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
                                     onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
@@ -8119,7 +8150,7 @@
                         );
                     })()}
 
-                    <div className="card">
+                    <div data-tour="cashflow-breakdown" className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                             <h3 style={{ fontFamily: 'Oswald', fontSize: '16px', color: 'var(--accent)' }}>Cash Flow Breakdown</h3>
                             <div style={{ display: 'flex', gap: '4px' }}>
