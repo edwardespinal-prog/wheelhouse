@@ -943,6 +943,7 @@
             const [showOnboarding, setShowOnboarding] = useState(false);
             const [demoMode, setDemoMode] = useState(localStorage.getItem('wh_demo_mode') === 'true');
             const [showThemeBuilder, setShowThemeBuilder] = useState(false);
+            const [showDemoConfirm, setShowDemoConfirm] = useState(false);
             const [customThemes, setCustomThemes] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('wheelhouse_custom_themes') || '[]'); } catch { return []; }
             });
@@ -1022,12 +1023,14 @@
                 });
             }, [fetchData]);
 
-            // Hide onboarding if user has data
+            // Show onboarding when portfolio is empty, hide when data exists
             useEffect(() => {
                 if (data.equities.length > 0 || data.taxLedger.length > 0) {
                     setShowOnboarding(false);
+                } else if (!loading && !demoMode) {
+                    setShowOnboarding(true);
                 }
-            }, [data.equities, data.taxLedger]);
+            }, [data.equities, data.taxLedger, loading, demoMode]);
 
             // Auto-refresh every 5 minutes
             useEffect(() => {
@@ -1153,6 +1156,23 @@
 
                     {error && <ErrorDisplay message={error} onClose={() => setError(null)} />}
                     {success && <SuccessDisplay message={success} onClose={() => setSuccess(null)} />}
+
+                    {/* Demo Data Confirmation Modal */}
+                    {showDemoConfirm && (
+                        <div onClick={() => setShowDemoConfirm(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:10001, background:'rgba(0,0,0,0.8)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            <div onClick={e => e.stopPropagation()} style={{ background:'var(--bg-primary)', border:'2px solid var(--accent)', borderRadius:'12px', padding:'28px', maxWidth:'400px', width:'90vw', textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+                                <div style={{ fontSize:'32px', marginBottom:'12px' }}>&#9888;&#65039;</div>
+                                <div style={{ fontSize:'15px', fontWeight:600, color:'var(--text-primary)', marginBottom:'8px' }}>Load Demo Data?</div>
+                                <div style={{ fontSize:'13px', color:'var(--text-muted)', marginBottom:'24px' }}>This will replace your current data with sample demo data.</div>
+                                <div style={{ display:'flex', gap:'10px', justifyContent:'center' }}>
+                                    <button onClick={() => setShowDemoConfirm(false)}
+                                        style={{ padding:'8px 20px', borderRadius:'6px', border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', cursor:'pointer', fontSize:'13px' }}>Cancel</button>
+                                    <button onClick={async () => { setShowDemoConfirm(false); await handleStartDemo(); }}
+                                        style={{ padding:'8px 20px', borderRadius:'6px', border:'none', background:'var(--accent)', color:'#fff', cursor:'pointer', fontSize:'13px', fontWeight:700 }}>Load Demo Data</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Logo Lightbox */}
                     {logoLightbox && (() => {
@@ -1524,6 +1544,10 @@
                                 style={{ padding:'4px 8px', fontSize:'11px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
                                 {Object.entries(TIMEZONE_OPTIONS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
                             </select>
+                            <button onClick={() => setShowDemoConfirm(true)}
+                                style={{ padding:'4px 8px', fontSize:'10px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}
+                                title="Load sample demo data">Demo
+                            </button>
                             <button className="button button-primary" onClick={() => handleRefreshPrices(false)}>
                                 {loading ? <Spinner /> : 'Refresh Prices'}
                             </button>
