@@ -944,6 +944,9 @@
             const [demoMode, setDemoMode] = useState(localStorage.getItem('wh_demo_mode') === 'true');
             const [showThemeBuilder, setShowThemeBuilder] = useState(false);
             const [showDemoConfirm, setShowDemoConfirm] = useState(false);
+            const [showSettings, setShowSettings] = useState(false);
+            const [showTour, setShowTour] = useState(false);
+            const [tourStep, setTourStep] = useState(0);
             const [customThemes, setCustomThemes] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('wheelhouse_custom_themes') || '[]'); } catch { return []; }
             });
@@ -1031,6 +1034,14 @@
                     setShowOnboarding(true);
                 }
             }, [data.equities, data.taxLedger, loading, demoMode]);
+
+            // Auto-launch tour on first visit (desktop only)
+            useEffect(() => {
+                if (!loading && !showOnboarding && !localStorage.getItem('wh_tour_completed') && window.innerWidth >= 768) {
+                    const timer = setTimeout(() => { setTourStep(0); setShowTour(true); }, 1500);
+                    return () => clearTimeout(timer);
+                }
+            }, [loading, showOnboarding]);
 
             // Auto-refresh every 5 minutes
             useEffect(() => {
@@ -1156,6 +1167,79 @@
 
                     {error && <ErrorDisplay message={error} onClose={() => setError(null)} />}
                     {success && <SuccessDisplay message={success} onClose={() => setSuccess(null)} />}
+
+                    {/* Guided Tour */}
+                    {showTour && <TourOverlay steps={TOUR_STEPS} currentStep={tourStep}
+                        onNext={() => { if (tourStep >= TOUR_STEPS.length - 1) { localStorage.setItem('wh_tour_completed', 'true'); setShowTour(false); } else { setTourStep(tourStep + 1); } }}
+                        onBack={() => setTourStep(Math.max(0, tourStep - 1))}
+                        onSkip={() => { localStorage.setItem('wh_tour_completed', 'true'); setShowTour(false); }} />}
+
+                    {/* Settings Modal */}
+                    {showSettings && (() => {
+                        const SettingsPanel = () => {
+                            const cfg = whConfig || {};
+                            const [tabs, setTabs] = useState({ dashboard: true, equities: true, options: true, watchlist: true, tax_ledger: true, cc_income: true, crypto: true, news: true, dark_pool_insiders: true, wheelers_paradise: true, uncle_eddies: true, ...cfg.tabs });
+                            const [features, setFeatures] = useState({ eth_institutional_intelligence: true, portfolio_risk_dashboard: true, cash_flow_tracker: true, benchmark_comparison: true, ...cfg.features });
+                            const alwaysOn = ['dashboard', 'equities', 'tax_ledger'];
+                            const tabLabels = { dashboard: 'Dashboard', equities: 'Equities', options: 'Options', watchlist: 'Watchlist', tax_ledger: 'Tax Ledger', cc_income: 'CC Income', crypto: 'Crypto', news: 'News', dark_pool_insiders: 'Dark Pool & Insiders', wheelers_paradise: "Wheeler's Paradise", uncle_eddies: 'Resale Tracker' };
+                            const featureLabels = { eth_institutional_intelligence: 'ETH Institutional Intelligence', portfolio_risk_dashboard: 'Portfolio Risk Dashboard', cash_flow_tracker: 'Cash Flow Tracker', benchmark_comparison: 'Benchmark Comparison (SPY/QQQ)' };
+                            const handleSave = async () => {
+                                const updated = { ...cfg, tabs, features };
+                                try {
+                                    await fetch(`${API_BASE}/config`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updated) });
+                                    setWhConfig(updated);
+                                    setShowSettings(false);
+                                } catch (e) { setError('Failed to save settings'); }
+                            };
+                            const Toggle = ({ checked, onChange, disabled }) => (
+                                <div onClick={disabled ? undefined : onChange} style={{ width: '36px', height: '20px', borderRadius: '10px', background: checked ? 'var(--accent)' : 'var(--border)', cursor: disabled ? 'not-allowed' : 'pointer', position: 'relative', transition: 'background 0.2s', opacity: disabled ? 0.5 : 1 }}>
+                                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: checked ? '18px' : '2px', transition: 'left 0.2s' }} />
+                                </div>
+                            );
+                            return (
+                                <div onClick={() => setShowSettings(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:10001, background:'rgba(0,0,0,0.8)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                    <div onClick={e => e.stopPropagation()} style={{ width:'440px', maxWidth:'95vw', maxHeight:'85vh', overflow:'auto', borderRadius:'12px', background:'var(--bg-primary)', border:'2px solid var(--accent)', boxShadow:'0 20px 60px rgba(0,0,0,0.5)' }}>
+                                        <div style={{ padding:'20px', borderBottom:'1px solid var(--border)' }}>
+                                            <div style={{ fontSize:'18px', fontWeight:700, color:'var(--text-primary)' }}>Settings</div>
+                                        </div>
+                                        <div style={{ padding:'20px' }}>
+                                            <div style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', marginBottom:'10px', fontWeight:600 }}>Tabs</div>
+                                            <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'20px' }}>
+                                                {Object.entries(tabLabels).map(([key, label]) => (
+                                                    <div key={key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0' }}>
+                                                        <span style={{ fontSize:'13px', color:'var(--text-primary)' }}>{label}</span>
+                                                        <Toggle checked={tabs[key] !== false} onChange={() => setTabs(prev => ({ ...prev, [key]: !prev[key] }))} disabled={alwaysOn.includes(key)} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div style={{ borderTop:'1px solid var(--border)', paddingTop:'16px' }}>
+                                                <div style={{ fontSize:'11px', color:'var(--text-muted)', textTransform:'uppercase', marginBottom:'10px', fontWeight:600 }}>Features</div>
+                                                <div style={{ display:'flex', flexDirection:'column', gap:'8px', marginBottom:'16px' }}>
+                                                    {Object.entries(featureLabels).map(([key, label]) => (
+                                                        <div key={key} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0' }}>
+                                                            <span style={{ fontSize:'13px', color:'var(--text-primary)' }}>{label}</span>
+                                                            <Toggle checked={features[key] !== false} onChange={() => setFeatures(prev => ({ ...prev, [key]: !prev[key] }))} disabled={false} />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div style={{ borderTop:'1px solid var(--border)', paddingTop:'16px' }}>
+                                                <button onClick={() => { localStorage.removeItem('wh_tour_completed'); setShowSettings(false); setTourStep(0); setShowTour(true); }}
+                                                    style={{ background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 16px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px', width:'100%' }}>
+                                                    Take the Tour
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div style={{ padding:'12px 20px', borderTop:'1px solid var(--border)', display:'flex', gap:'8px', justifyContent:'flex-end' }}>
+                                            <button onClick={() => setShowSettings(false)} style={{ padding:'8px 20px', borderRadius:'6px', border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', cursor:'pointer', fontSize:'13px' }}>Cancel</button>
+                                            <button onClick={handleSave} style={{ padding:'8px 20px', borderRadius:'6px', border:'none', background:'var(--accent)', color:'#fff', cursor:'pointer', fontSize:'13px', fontWeight:700 }}>Save</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        };
+                        return <SettingsPanel />;
+                    })()}
 
                     {/* Demo Data Confirmation Modal */}
                     {showDemoConfirm && (
@@ -1531,7 +1615,7 @@
                             <span>WheelHouse</span>
                         </div>
                         <div className="button-group" style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
-                            <select value={themeKey} onChange={e => { if (e.target.value === '__builder__') { setShowThemeBuilder(true); } else { setPreviewTheme(e.target.value); } }}
+                            <select data-tour="theme-picker" value={themeKey} onChange={e => { if (e.target.value === '__builder__') { setShowThemeBuilder(true); } else { setPreviewTheme(e.target.value); } }}
                                 style={{ padding:'4px 8px', fontSize:'11px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
                                 {Object.entries(allThemes).map(([k,v]) => <option key={k} value={k}>{v.label}{k.startsWith('custom-') ? ' *' : ''}</option>)}
                                 <option value="__builder__">+ Build Your Own</option>
@@ -1544,6 +1628,12 @@
                                 style={{ padding:'4px 8px', fontSize:'11px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
                                 {Object.entries(TIMEZONE_OPTIONS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
                             </select>
+                            <button data-tour="settings-gear" onClick={() => setShowSettings(true)}
+                                style={{ padding:'4px 6px', fontSize:'14px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer', lineHeight:1 }}
+                                title="Settings">&#9881;</button>
+                            <button onClick={() => { setTourStep(0); setShowTour(true); }}
+                                style={{ padding:'4px 6px', fontSize:'13px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer', lineHeight:1 }}
+                                title="Take the tour">&#10068;</button>
                             <button onClick={() => setShowDemoConfirm(true)}
                                 style={{ padding:'4px 8px', fontSize:'10px', background:'transparent', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}
                                 title="Load sample demo data">Demo
@@ -1583,8 +1673,10 @@
                                 if (t.feature && fc[t.feature] === false) return false;
                                 return true;
                             });
+                            const tourKeys = { 'equities': 'equities-tab', 'options': 'options-tab', "wheeler's": 'wheelers-tab', 'tax-ledger': 'tax-ledger-tab', 'watchlist': 'watchlist-tab', 'dark-pool-&-insiders': 'darkpool-tab' };
                             return visibleTabs.map(tab => (
                                 <button key={tab.key}
+                                    data-tour={tourKeys[tab.key] || undefined}
                                     className={`tab-button ${currentTab === tab.key ? 'active' : ''}`}
                                     onClick={() => { setCurrentTab(tab.key); setTickerFilter(null); setTabFilter(null); }}>
                                     {tab.label}
@@ -1641,9 +1733,91 @@
             useEffect(() => { fetch(`${API_BASE}/fear-greed`).then(r=>r.json()).then(d=>setFgData(d)).catch(()=>{}); }, []);
             const eq = fgData.equity, cr = fgData.crypto;
             return (
-                <div className="fg-container">
+                <div className="fg-container" data-tour="fear-greed">
                     <FearGreedGauge title="S&P 500 Fear & Greed" value={eq?eq.value:null} label={eq?eq.label:''} details={eq?`Prev Close: ${eq.previous_close} | Week Ago: ${eq.week_ago} | Month Ago: ${eq.month_ago}`:''} />
                     <FearGreedGauge title="Crypto Fear & Greed" value={cr?cr.value:null} label={cr?cr.label:''} details={cr?`Prev Close: ${cr.previous_close || 0} | Week Ago: ${cr.week_ago || 0} | Month Ago: ${cr.month_ago || 0}`:''} />
+                </div>
+            );
+        };
+
+        // Tour Steps & Overlay
+        const TOUR_STEPS = [
+            { target: '[data-tour="dashboard-overview"]', title: 'Your Command Center', description: 'Everything updates in real time. Portfolio value, P/L, benchmarks, and market sentiment — all at a glance.', position: 'bottom' },
+            { target: '[data-tour="portfolio-value"]', title: 'Portfolio Total Value', description: 'Your total portfolio value: equities + options + crypto + cash. Updates every 5 minutes or on manual refresh.', position: 'bottom' },
+            { target: '[data-tour="performance-chart"]', title: 'Performance Over Time', description: 'Track your portfolio performance. Toggle between Live, 1D, 1W, 1M, 3M, YTD, and 1Y views.', position: 'top' },
+            { target: '[data-tour="fear-greed"]', title: 'Market Sentiment', description: 'Fear & Greed gauges for equity and crypto markets. Extreme fear often means buying opportunities.', position: 'bottom' },
+            { target: '[data-tour="equities-tab"]', title: 'Add Your Positions', description: 'Add your stock positions here. Each new position automatically creates a tax ledger entry for tracking gains.', position: 'bottom' },
+            { target: '[data-tour="options-tab"]', title: 'Options Tracking', description: 'Track options with real-time mark pricing (mid bid/ask). Covered calls, spreads, and CSPs all supported.', position: 'bottom' },
+            { target: '[data-tour="wheelers-tab"]', title: "Wheeler's Paradise", description: 'Pre-trade cockpit for the wheel strategy. Analyze any ticker for CC/CSP premium, and simulate multi-cycle returns.', position: 'bottom' },
+            { target: '[data-tour="tax-ledger-tab"]', title: 'Tax Ledger', description: 'Every trade flows here automatically. See realized P/L, short-term vs long-term breakdown, and tax-loss harvesting candidates.', position: 'bottom' },
+            { target: '[data-tour="watchlist-tab"]', title: 'Watchlist & Alerts', description: 'Track tickers with target prices. Get alerts for price hits, dark pool spikes, insider buying, and ETF flow changes.', position: 'bottom' },
+            { target: '[data-tour="darkpool-tab"]', title: 'Dark Pool & Insiders', description: 'FINRA dark pool short volume and insider trading data. See who is buying and selling behind the scenes.', position: 'bottom' },
+            { target: '[data-tour="theme-picker"]', title: 'Make It Yours', description: 'Pick from 9 themes or build a custom one with your own colors, font, and logo.', position: 'left' },
+            { target: '[data-tour="settings-gear"]', title: 'Settings', description: "Toggle tabs on or off. Don't trade crypto? Hide the Crypto tab. Don't sell collectibles? Hide Resale Tracker.", position: 'left' },
+        ];
+
+        const TourOverlay = ({ steps, currentStep, onNext, onBack, onSkip }) => {
+            const [rect, setRect] = useState(null);
+            const step = steps[currentStep];
+
+            useEffect(() => {
+                if (!step) return;
+                const findAndPosition = () => {
+                    const el = document.querySelector(step.target);
+                    if (!el) { onNext(); return; }
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => {
+                        const r = el.getBoundingClientRect();
+                        setRect({ top: r.top - 8, left: r.left - 8, width: r.width + 16, height: r.height + 16 });
+                    }, 350);
+                };
+                findAndPosition();
+                const handleResize = () => findAndPosition();
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, [currentStep, step]);
+
+            useEffect(() => {
+                const handleKey = (e) => { if (e.key === 'Escape') onSkip(); };
+                window.addEventListener('keydown', handleKey);
+                return () => window.removeEventListener('keydown', handleKey);
+            }, [onSkip]);
+
+            if (!step || !rect) return null;
+
+            const pad = 4;
+            const tipW = 320, tipH = 140;
+            let tipTop, tipLeft;
+            const pos = step.position || 'bottom';
+            if (pos === 'bottom') { tipTop = rect.top + rect.height + pad + 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
+            else if (pos === 'top') { tipTop = rect.top - tipH - pad - 12; tipLeft = rect.left + rect.width / 2 - tipW / 2; }
+            else if (pos === 'left') { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left - tipW - pad - 12; }
+            else { tipTop = rect.top + rect.height / 2 - tipH / 2; tipLeft = rect.left + rect.width + pad + 12; }
+            tipLeft = Math.max(8, Math.min(tipLeft, window.innerWidth - tipW - 8));
+            tipTop = Math.max(8, Math.min(tipTop, window.innerHeight - tipH - 8));
+
+            return (
+                <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:10002 }}>
+                    <svg style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%' }}>
+                        <defs><mask id="tour-mask">
+                            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                            <rect x={rect.left} y={rect.top} width={rect.width} height={rect.height} rx="8" fill="black" />
+                        </mask></defs>
+                        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#tour-mask)" />
+                    </svg>
+                    <div style={{ position:'absolute', top:rect.top, left:rect.left, width:rect.width, height:rect.height, border:'2px solid var(--accent)', borderRadius:'8px', pointerEvents:'none', boxShadow:'0 0 0 4px rgba(0,212,255,0.2)' }} />
+                    <div style={{ position:'absolute', top:tipTop, left:tipLeft, width:tipW, background:'var(--bg-primary)', border:'2px solid var(--accent)', borderRadius:'10px', padding:'16px', boxShadow:'0 8px 32px rgba(0,0,0,0.5)' }}>
+                        <div style={{ fontSize:'15px', fontWeight:700, color:'var(--text-primary)', marginBottom:'6px' }}>{step.title}</div>
+                        <div style={{ fontSize:'13px', color:'var(--text-muted)', marginBottom:'14px', lineHeight:1.4 }}>{step.description}</div>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                            <span style={{ fontSize:'11px', color:'var(--text-muted)' }}>Step {currentStep + 1} of {steps.length}</span>
+                            <div style={{ display:'flex', gap:'6px' }}>
+                                <button onClick={onSkip} style={{ background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer', fontSize:'11px', padding:'4px 8px' }}>Skip</button>
+                                {currentStep > 0 && <button onClick={onBack} style={{ padding:'5px 12px', borderRadius:'4px', border:'1px solid var(--border)', background:'transparent', color:'var(--text-primary)', cursor:'pointer', fontSize:'12px' }}>Back</button>}
+                                <button onClick={onNext} style={{ padding:'5px 12px', borderRadius:'4px', border:'none', background:'var(--accent)', color:'#fff', cursor:'pointer', fontSize:'12px', fontWeight:600 }}>{currentStep === steps.length - 1 ? 'Done' : 'Next'}</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -1796,9 +1970,9 @@
             }, [equities, crypto]);
 
             return (
-                <div>
+                <div data-tour="dashboard-overview">
                     <div className="stats-row">
-                        <div className="stat-card">
+                        <div className="stat-card" data-tour="portfolio-value">
                             <div className="stat-label">Portfolio Total Value (Current)</div>
                             <div className="stat-value" style={{ color: 'var(--accent)' }}>
                                 {formatCurrency(summary.net_worth || 0)}
@@ -1945,7 +2119,7 @@
                         );
                     })()}
 
-                    <div className="card" style={{ marginBottom: '24px' }}>
+                    <div className="card" data-tour="performance-chart" style={{ marginBottom: '24px' }}>
                         <h3 style={{ color: '#00d4ff', marginBottom: '16px', fontSize: '16px', fontWeight: '600' }}>Performance Timeframes</h3>
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
                             {[
@@ -6255,14 +6429,15 @@
 
                     {loading ? <div style={{textAlign:'center',padding:'40px'}}><Spinner /></div> : (<>
                         {sortedTickers.length > 0 && (() => {
-                            const highShort = sortedTickers.filter(t => t.short_ratio > 50).length;
-                            const unusual = sortedTickers.filter(t => t.optionsFlow?.unusual_count > 0).length;
-                            const recentBuys = sortedTickers.filter(t => t.latestInsider?.is_purchase).length;
-                            return (highShort > 0 || unusual > 0 || recentBuys > 0) ? (
+                            const highShortTickers = sortedTickers.filter(t => t.short_ratio > 50).map(t => t.ticker);
+                            const unusualTickers = sortedTickers.filter(t => t.optionsFlow?.unusual_count > 0).map(t => t.ticker);
+                            const recentBuyTickers = sortedTickers.filter(t => t.latestInsider?.is_purchase).map(t => t.ticker);
+                            const fmtList = (arr) => arr.length <= 4 ? arr.join(', ') : arr.slice(0, 4).join(', ') + ` +${arr.length - 4} more`;
+                            return (highShortTickers.length > 0 || unusualTickers.length > 0 || recentBuyTickers.length > 0) ? (
                                 <div style={{ marginBottom: '16px', padding: '10px 16px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                                    {highShort > 0 && <span style={{ color: '#ef4444' }}>{highShort} ticker{highShort > 1 ? 's' : ''} with short ratio &gt;50%</span>}
-                                    {unusual > 0 && <span style={{ color: 'var(--accent)' }}>{unusual} with unusual options activity</span>}
-                                    {recentBuys > 0 && <span style={{ color: '#10b981' }}>{recentBuys} with insider buying</span>}
+                                    {highShortTickers.length > 0 && <span style={{ color: '#ef4444' }}><strong>{fmtList(highShortTickers)}</strong> {highShortTickers.length === 1 ? 'has' : 'have'} short ratio &gt;50%</span>}
+                                    {unusualTickers.length > 0 && <span style={{ color: 'var(--accent)' }}><strong>{fmtList(unusualTickers)}</strong> {unusualTickers.length === 1 ? 'has' : 'have'} unusual options activity</span>}
+                                    {recentBuyTickers.length > 0 && <span style={{ color: '#10b981' }}><strong>{fmtList(recentBuyTickers)}</strong> {recentBuyTickers.length === 1 ? 'has' : 'have'} insider buying</span>}
                                 </div>
                             ) : null;
                         })()}
