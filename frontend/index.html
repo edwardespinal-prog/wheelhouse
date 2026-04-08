@@ -831,6 +831,22 @@
                 border: '#c8c8c8', textPrimary: '#212121', textMuted: '#757575',
                 isLight: true,
             },
+            // ── Creator's Picks ──
+            'knicks': {
+                label: 'NY Knicks',
+                logo: 'https://upload.wikimedia.org/wikipedia/en/2/25/New_York_Knicks_logo.svg',
+                accent: '#F15A22', accentBlue: '#003DA5',
+                bgPrimary: '#0d1129', bgCard: 'linear-gradient(135deg, #111738 0%, #182048 100%)',
+                border: '#1c2a5a', textPrimary: '#f0f0f0', textMuted: '#a0aec0',
+            },
+            'knicks-away': {
+                label: 'Knicks Away',
+                logo: 'https://upload.wikimedia.org/wikipedia/en/2/25/New_York_Knicks_logo.svg',
+                accent: '#F15A22', accentBlue: '#003DA5',
+                bgPrimary: '#faf8f5', bgCard: 'linear-gradient(135deg, #ffffff 0%, #fef6ee 100%)',
+                border: '#e8ddd0', textPrimary: '#1a1520', textMuted: '#7a6e62',
+                isLight: true,
+            },
         };
 
         const applyTheme = (key) => {
@@ -947,6 +963,7 @@
             const [showSettings, setShowSettings] = useState(false);
             const [showTour, setShowTour] = useState(false);
             const [tourStep, setTourStep] = useState(0);
+            const [activeTour, setActiveTour] = useState(null); // {steps, name, lsKey}
             const [customThemes, setCustomThemes] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('wheelhouse_custom_themes') || '[]'); } catch { return []; }
             });
@@ -1035,13 +1052,29 @@
                 }
             }, [data.equities, data.taxLedger, loading, demoMode]);
 
-            // Auto-launch tour on first visit (desktop only)
+            // Auto-launch main tour on first visit (desktop only)
             useEffect(() => {
                 if (!loading && !showOnboarding && !localStorage.getItem('wh_tour_completed') && window.innerWidth >= 768) {
                     const timer = setTimeout(() => { setTourStep(0); setShowTour(true); }, 1500);
                     return () => clearTimeout(timer);
                 }
             }, [loading, showOnboarding]);
+
+            // Tab tour trigger on tab switch
+            const TAB_TOUR_KEYS = { dashboard: 'dashboard', equities: 'equities', options: 'options', "wheeler's": 'wheelers', 'tax-ledger': 'taxLedger', watchlist: 'watchlist', 'cc-income': 'ccIncome', 'dark-pool-&-insiders': 'darkPool', crypto: 'crypto', news: 'news', "uncle-eddi3's": 'resaleTracker' };
+            useEffect(() => {
+                const tourKey = TAB_TOUR_KEYS[currentTab];
+                if (!tourKey || !TAB_TOURS[tourKey]) return;
+                const mainDone = localStorage.getItem('wh_tour_completed') === 'true';
+                const tabDone = localStorage.getItem(`wh_tour_${tourKey}_completed`) === 'true';
+                if (mainDone && !tabDone && !showTour && !activeTour && window.innerWidth >= 768) {
+                    const timer = setTimeout(() => {
+                        setTourStep(0);
+                        setActiveTour({ steps: TAB_TOURS[tourKey], name: tourKey, lsKey: `wh_tour_${tourKey}_completed` });
+                    }, 1000);
+                    return () => clearTimeout(timer);
+                }
+            }, [currentTab, showTour, activeTour]);
 
             // Auto-refresh every 5 minutes
             useEffect(() => {
@@ -1168,11 +1201,16 @@
                     {error && <ErrorDisplay message={error} onClose={() => setError(null)} />}
                     {success && <SuccessDisplay message={success} onClose={() => setSuccess(null)} />}
 
-                    {/* Guided Tour */}
+                    {/* Guided Tour — main */}
                     {showTour && <TourOverlay steps={TOUR_STEPS} currentStep={tourStep}
                         onNext={() => { if (tourStep >= TOUR_STEPS.length - 1) { localStorage.setItem('wh_tour_completed', 'true'); setShowTour(false); } else { setTourStep(tourStep + 1); } }}
                         onBack={() => setTourStep(Math.max(0, tourStep - 1))}
                         onSkip={() => { localStorage.setItem('wh_tour_completed', 'true'); setShowTour(false); }} />}
+                    {/* Guided Tour — tab */}
+                    {activeTour && <TourOverlay steps={activeTour.steps} currentStep={tourStep}
+                        onNext={() => { if (tourStep >= activeTour.steps.length - 1) { localStorage.setItem(activeTour.lsKey, 'true'); setActiveTour(null); setTourStep(0); } else { setTourStep(tourStep + 1); } }}
+                        onBack={() => setTourStep(Math.max(0, tourStep - 1))}
+                        onSkip={() => { localStorage.setItem(activeTour.lsKey, 'true'); setActiveTour(null); setTourStep(0); }} />}
 
                     {/* Settings Modal */}
                     {showSettings && (() => {
@@ -1224,10 +1262,16 @@
                                                 </div>
                                             </div>
                                             <div style={{ borderTop:'1px solid var(--border)', paddingTop:'16px' }}>
-                                                <button onClick={() => { localStorage.removeItem('wh_tour_completed'); setShowSettings(false); setTourStep(0); setShowTour(true); }}
-                                                    style={{ background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 16px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px', width:'100%' }}>
-                                                    Take the Tour
-                                                </button>
+                                                <div style={{ display:'flex', gap:'8px' }}>
+                                                    <button onClick={() => { localStorage.removeItem('wh_tour_completed'); setShowSettings(false); setTourStep(0); setShowTour(true); }}
+                                                        style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 12px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px' }}>
+                                                        Full Tour
+                                                    </button>
+                                                    <button onClick={() => { const tk = TAB_TOUR_KEYS[currentTab]; if (tk && TAB_TOURS[tk]) { setShowSettings(false); setTourStep(0); setActiveTour({ steps: TAB_TOURS[tk], name: tk, lsKey: `wh_tour_${tk}_completed` }); } }}
+                                                        style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 12px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px' }}>
+                                                        Tour This Tab
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div style={{ padding:'12px 20px', borderTop:'1px solid var(--border)', display:'flex', gap:'8px', justifyContent:'flex-end' }}>
@@ -1617,7 +1661,12 @@
                         <div className="button-group" style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
                             <select data-tour="theme-picker" value={themeKey} onChange={e => { if (e.target.value === '__builder__') { setShowThemeBuilder(true); } else { setPreviewTheme(e.target.value); } }}
                                 style={{ padding:'4px 8px', fontSize:'11px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'4px', color:'var(--text-muted)', cursor:'pointer' }}>
-                                {Object.entries(allThemes).map(([k,v]) => <option key={k} value={k}>{v.label}{k.startsWith('custom-') ? ' *' : ''}</option>)}
+                                {Object.entries(allThemes).map(([k,v]) => {
+                                    const items = [];
+                                    if (k === 'knicks') items.push(<option key="__divider__" disabled style={{fontSize:'10px'}}>── Creator's Picks ──</option>);
+                                    items.push(<option key={k} value={k}>{v.label}{k.startsWith('custom-') ? ' *' : ''}</option>);
+                                    return items;
+                                })}
                                 <option value="__builder__">+ Build Your Own</option>
                             </select>
                             <select value={fontKey} onChange={e => { setFontKey(e.target.value); localStorage.setItem('wh-font', e.target.value); }}
@@ -1755,6 +1804,60 @@
             { target: '[data-tour="theme-picker"]', title: 'Make It Yours', description: 'Pick from 9 themes or build a custom one with your own colors, font, and logo.', position: 'left' },
             { target: '[data-tour="settings-gear"]', title: 'Settings', description: "Toggle tabs on or off. Don't trade crypto? Hide the Crypto tab. Don't sell collectibles? Hide Resale Tracker.", position: 'left' },
         ];
+
+        const TAB_TOURS = {
+            dashboard: [
+                { target: '[data-tour="perf-timeframes"]', title: 'Performance Timeframes', description: 'Switch between Live, 1D, 1W, 1M, 3M, YTD, and 1Y to see how your portfolio moved over any period.', position: 'bottom' },
+                { target: '[data-tour="unrealized-pl"]', title: 'Unrealized P/L & Tax Harvesting', description: 'Short-term vs long-term breakdown of your open positions. Below, tax-loss harvesting candidates show positions you could sell to offset gains.', position: 'top' },
+                { target: '[data-tour="benchmark-comparison"]', title: 'Benchmark Comparison', description: 'Are you beating the market? Compare your YTD return against SPY and QQQ.', position: 'bottom' },
+                { target: '[data-tour="etf-flow-card"]', title: 'ETH ETF Flows', description: 'Institutional money flowing into or out of ETH ETFs. Click to jump to the Crypto tab for the full breakdown.', position: 'bottom' },
+                { target: '[data-tour="risk-dashboard"]', title: 'Portfolio Risk Dashboard', description: 'Concentration alerts, beta exposure, sector breakdown, and options at-risk — each with actionable recommendations.', position: 'top' },
+            ],
+            equities: [
+                { target: '[data-tour="add-position-btn"]', title: 'Add a Position', description: 'Enter ticker, quantity, and average cost. This automatically creates a tax ledger entry so your gains are tracked from day one.', position: 'bottom' },
+                { target: '[data-tour="interval-pl-selectors"]', title: 'Interval P/L', description: 'Toggle ALL, 1D, 1W, 1M, 3M, YTD, 1Y to see how each position performed over different timeframes.', position: 'bottom' },
+                { target: '[data-tour="equity-aggregate"]', title: 'Portfolio Summary', description: 'Total equity value and aggregate unrealized P/L at the top. Updates in real time with every price refresh.', position: 'bottom' },
+            ],
+            options: [
+                { target: '[data-tour="add-option-btn"]', title: 'Add an Option', description: 'Track calls, puts, spreads, and covered calls. Enter the OCC symbol or fill in the details manually.', position: 'bottom' },
+                { target: '[data-tour="options-summary"]', title: 'Options Summary', description: 'Total options value and P/L at the top. Covered calls show premium P/L separate from stock P/L.', position: 'bottom' },
+            ],
+            wheelers: [
+                { target: '[data-tour="wheeler-search"]', title: 'Analyze Any Ticker', description: 'Enter a ticker to pull up the full wheel analysis — premium yields, scorecard, and multi-cycle simulations.', position: 'bottom' },
+                { target: '[data-tour="active-wheels"]', title: 'Active Wheels', description: 'Auto-detects your open CCs and CSPs. Exit Intelligence gives you a signal: CLOSE, ROLL, or HOLD.', position: 'top' },
+            ],
+            taxLedger: [
+                { target: '[data-tour="tax-ytd-toggle"]', title: 'YTD Filter', description: 'Filter to current year realized gains only. Your estimated tax reserve auto-calculates based on short-term and long-term rates.', position: 'bottom' },
+                { target: '[data-tour="tax-open-closed"]', title: 'Open vs Closed', description: 'Switch between open positions (unrealized) and closed trades (realized P/L). Closed trades show date sold and proceeds.', position: 'bottom' },
+                { target: '[data-tour="tax-summary"]', title: 'Tax Summary', description: 'Realized P/L, tax reserve, and short-term vs long-term breakdown at a glance.', position: 'bottom' },
+            ],
+            watchlist: [
+                { target: '[data-tour="watchlist-add"]', title: 'Track a Ticker', description: 'Add a ticker with a target buy price and notes. Distance-from-target shows how close it is to your entry point.', position: 'bottom' },
+                { target: '[data-tour="watchlist-alerts"]', title: 'Smart Alerts', description: 'Alerts fire automatically: price target hits, dark pool short ratio spikes, insider buying detected, and ETF flow regime changes.', position: 'bottom' },
+            ],
+            ccIncome: [
+                { target: '[data-tour="add-cc-btn"]', title: 'Log CC Premium', description: 'Log covered call premium collected. This automatically adds to your cash balance, matching how your brokerage handles it.', position: 'bottom' },
+                { target: '[data-tour="cc-summary"]', title: 'Premium Summary', description: 'Total premium collected, cost to close, and net profit. Sort by ticker, expiration, or P/L.', position: 'bottom' },
+            ],
+            darkPool: [
+                { target: '[data-tour="dp-portfolio-cards"]', title: 'Portfolio Overview', description: 'Short ratio and 10-day sparklines for every position. Red cards mean high institutional short volume — worth watching.', position: 'bottom' },
+                { target: '[data-tour="dp-search"]', title: 'Search Any Ticker', description: 'Not just your portfolio — search any ticker to check its dark pool short volume and insider activity.', position: 'bottom' },
+            ],
+            crypto: [
+                { target: '[data-tour="crypto-positions"]', title: 'Crypto Holdings', description: 'Your crypto positions with live pricing, cost basis, and unrealized P/L.', position: 'bottom' },
+                { target: '[data-tour="etf-flows-section"]', title: 'ETH ETF Flows', description: 'Daily institutional flows by fund — BlackRock, Fidelity, Grayscale, and more. Green is money in, red is money out.', position: 'top' },
+                { target: '[data-tour="bmnr-nav"]', title: 'BMNR NAV Premium/Discount', description: 'Is BMNR cheap or expensive relative to its ETH holdings? Green means discount, red means premium.', position: 'top' },
+            ],
+            news: [
+                { target: '[data-tour="news-ticker-filter"]', title: 'Filter by Ticker', description: 'Filter news by All, My Tickers, Macro indices, or a specific stock. Only see what matters to your portfolio.', position: 'bottom' },
+                { target: '[data-tour="news-heatmap"]', title: 'Portfolio Heatmap', description: 'Tiles sized by portfolio weight, colored by daily % change. Click any tile to filter news for that ticker.', position: 'top' },
+                { target: '[data-tour="news-sentiment"]', title: 'Sentiment Analysis', description: 'Each article tagged bullish, bearish, or neutral. Sentiment summary shows the overall tone across your portfolio.', position: 'bottom' },
+            ],
+            resaleTracker: [
+                { target: '[data-tour="resale-views"]', title: 'Collection & Inventory', description: 'Toggle between My Collection (personal items) and Active Inventory (items for sale). Track across eBay, StockX, and more.', position: 'bottom' },
+                { target: '[data-tour="resale-sales"]', title: 'Sales Ledger', description: 'Track every sale: sold, shipped, completed. Platform fees auto-calculated. Import eBay transactions via CSV.', position: 'top' },
+            ],
+        };
 
         const TourOverlay = ({ steps, currentStep, onNext, onBack, onSkip }) => {
             const [rect, setRect] = useState(null);
@@ -2022,7 +2125,7 @@
                         const alphaVsSpy = spy ? myYTD - spy.ytd_pct : null;
                         const alphaVsQqq = qqq ? myYTD - qqq.ytd_pct : null;
                         return (
-                            <div className="stats-row">
+                            <div data-tour="benchmark-comparison" className="stats-row">
                                 <div className="stat-card" style={{ flex: '1' }}>
                                     <div className="stat-label" style={{ marginBottom: '12px' }}>YTD Benchmark Comparison</div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -2099,7 +2202,7 @@
                         const maxAbs = Math.max(...last7.map(d => Math.abs(d.Total || 0)), 1);
                         const trend7d = last7.reduce((s, d) => s + (d.Total || 0), 0);
                         return (
-                            <div className="stat-card" onClick={() => { if (typeof setActiveTab === 'function') setActiveTab('crypto'); }}
+                            <div data-tour="etf-flow-card" className="stat-card" onClick={() => { if (typeof setActiveTab === 'function') setActiveTab('crypto'); }}
                                 style={{ cursor: 'pointer', marginBottom: '16px', position: 'relative' }}>
                                 <div className="stat-label">ETH ETF Flows {trend7d >= 0 ? '↑' : '↓'}</div>
                                 <div className="stat-value" style={{ color: yesterdayTotal >= 0 ? '#10b981' : '#ef4444', fontSize: '22px' }}>
@@ -2328,7 +2431,7 @@
                     </div>
 
                     {/* Realized vs Unrealized P/L */}
-                    <div className="card" style={{ marginTop: '24px' }}>
+                    <div data-tour="unrealized-pl" className="card" style={{ marginTop: '24px' }}>
                         <h3 style={{ color: 'var(--accent)', marginBottom: '16px', fontSize: '16px', fontWeight: '600' }}>Realized vs. Unrealized P/L</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
                             {[
@@ -2495,7 +2598,7 @@
             return (
                 <div>
                     {/* Risk Score + Alerts */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '16px', marginBottom: '24px' }}>
+                    <div data-tour="risk-dashboard" style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '16px', marginBottom: '24px' }}>
                         <div className="stat-card" style={{ minWidth: '160px', borderLeftColor: scoreColor[risk_score] || 'var(--accent)', position: 'relative', cursor: 'help' }}
                             title={'MINIMAL: 0 alerts — portfolio is well-diversified\nLOW: 1-2 alerts — minor concentration or expiry risks\nMODERATE: 3-5 alerts — multiple positions need attention\nHIGH: 6+ alerts — significant concentration, sector, or options risk\n\nAlerts trigger on: single position >15%, sector >30%, options expiring <30 days, deep OTM positions (>25% away from strike)'}>
                             <div className="stat-label">Risk Score <span style={{fontSize:'10px',color:'#a0aec0'}}>(?)</span></div>
@@ -2925,7 +3028,7 @@
                     )}
 
                     {/* Sentiment Summary — 2 cards with sparkline */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                    <div data-tour="news-sentiment" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px', marginBottom: '20px' }}>
                         <div className="stat-card">
                             <div className="stat-label">Portfolio Sentiment</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2978,7 +3081,7 @@
                             <button type="submit" className="button button-primary">{loading ? <Spinner /> : 'Search'}</button>
                         </form>
                         <button onClick={() => { setFilter('all'); setSearchTicker(''); setSortMode('relevance'); loadNews(); }} className="button button-primary" style={{fontSize:'11px',padding:'6px 12px'}}>Refresh</button>
-                        <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
+                        <div data-tour="news-ticker-filter" style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
                             {[['all','All News'],['portfolio','My Portfolio'],['macro','Market'],['alerts',`Alerts${alertCount > 0 ? ` (${alertCount})` : ''}`]].map(([k,label]) => (
                                 <button key={k} onClick={() => setFilter(k)}
                                     style={{ padding: '4px 10px', fontSize: '11px', border: `1px solid ${k === 'alerts' && alertCount > 0 ? '#f59e0b' : 'var(--border)'}`, borderRadius: '4px', cursor: 'pointer',
@@ -3011,7 +3114,7 @@
 
                     {/* Heat Map */}
                     {heatmapData?.tiles && (
-                        <div style={{ marginBottom: '16px' }}>
+                        <div data-tour="news-heatmap" style={{ marginBottom: '16px' }}>
                             <div onClick={() => setHeatmapOpen(!heatmapOpen)} style={{ cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', userSelect: 'none' }}>
                                 {heatmapOpen ? '▾' : '▸'} <span style={{ fontFamily: 'Oswald', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '11px' }}>Heat Map</span>
                                 {heatmapData.as_of && <span style={{ marginLeft: '8px', fontSize: '10px', opacity: 0.6 }}>as of {heatmapData.as_of.slice(0,16).replace('T',' ')}</span>}
@@ -3275,8 +3378,8 @@
             return { interval, setInterval, getPL, getTotal, loading };
         };
 
-        const IntervalBar = ({ interval, setInterval, total, loading }) => (
-            <div className="card" style={{ marginBottom: '16px', padding: '12px 16px' }}>
+        const IntervalBar = ({ interval, setInterval, total, loading, dataTour }) => (
+            <div className="card" data-tour={dataTour} style={{ marginBottom: '16px', padding: '12px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                         {INTERVALS.map(iv => (
@@ -3427,8 +3530,8 @@
 
             return (
                 <div>
-                    <IntervalBar interval={interval} setInterval={setIv} total={eqTotal} loading={loading} />
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                    <IntervalBar interval={interval} setInterval={setIv} total={eqTotal} loading={loading} dataTour="interval-pl-selectors" />
+                    <div data-tour="equity-aggregate" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                         <div className="stat-card">
                             <div className="stat-label">Equities Portfolio Value</div>
                             <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(data.summary?.equities_value || 0)}</div>
@@ -3441,7 +3544,7 @@
                         </div>
                     )}
                     <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="button button-primary" onClick={handleOpenModal}>
+                        <button data-tour="add-position-btn" className="button button-primary" onClick={handleOpenModal}>
                             + Add Position
                         </button>
                         <select value={tickerFilter || ''} onChange={e => e.target.value ? onSetTickerFilter(e.target.value) : onClearFilter()}
@@ -3818,7 +3921,7 @@
             return (
                 <div>
                     <IntervalBar interval={optInterval} setInterval={setOptInterval} total={optTotal} loading={markLoading} />
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                    <div data-tour="options-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                         <div className="stat-card">
                             <div className="stat-label">Options Portfolio Value</div>
                             <div className="stat-value" style={{ color: 'var(--accent)' }}>{formatCurrency(data.summary?.options_value || 0)}</div>
@@ -3831,7 +3934,7 @@
                         </div>
                     )}
                     <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="button button-primary" onClick={handleOpenModal}>
+                        <button data-tour="add-option-btn" className="button button-primary" onClick={handleOpenModal}>
                             + Add Option
                         </button>
                         <select value={tickerFilter || ''} onChange={e => e.target.value ? onSetTickerFilter(e.target.value) : onClearFilter()}
@@ -4213,7 +4316,7 @@
                 <div>
                     {/* Alerts Banner */}
                     {alerts.length > 0 && (
-                        <div className="card" style={{ marginBottom: '20px', borderLeft: '3px solid #10b981' }}>
+                        <div data-tour="watchlist-alerts" className="card" style={{ marginBottom: '20px', borderLeft: '3px solid #10b981' }}>
                             <h3 style={{ fontFamily: 'Oswald', fontSize: '14px', color: '#10b981', marginBottom: '8px' }}>Watchlist Alerts</h3>
                             {alerts.map((a, i) => (
                                 <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '6px 0', borderBottom: i < alerts.length - 1 ? '1px solid var(--border)' : 'none' }}>
@@ -4385,7 +4488,7 @@
 
                     {/* Add Button + Form */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-                        <button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ ticker: '', target_buy: '', notes: '' }); }}
+                        <button data-tour="watchlist-add" onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ ticker: '', target_buy: '', notes: '' }); }}
                             style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontFamily: 'Oswald', fontSize: '14px' }}>
                             {showForm ? 'Cancel' : '+ Add to Watchlist'}
                         </button>
@@ -4728,7 +4831,7 @@
             return (
                 <div>
                     {/* Search */}
-                    <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                    <form data-tour="wheeler-search" onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                         <input type="text" placeholder="Enter ticker (e.g., SOFI, HOOD, RKLB)..." value={ticker} onChange={e => setTicker(e.target.value)} className="search-box" style={{ flex: 1, maxWidth: 'none' }} />
                         <button type="submit" className="button button-primary" disabled={loading}>{loading ? 'Analyzing...' : 'Analyze'}</button>
                     </form>
@@ -4974,7 +5077,7 @@
             const wheels = wheelData?.active_wheels || [];
 
             return (
-                <div style={{ marginTop: '32px' }}>
+                <div data-tour="active-wheels" style={{ marginTop: '32px' }}>
                     <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px', marginBottom: '16px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                             <h3 style={{ color: '#00d4ff', fontSize: '16px', fontWeight: 600, margin: 0 }}>Active Wheels</h3>
@@ -5574,7 +5677,7 @@
                         ))}
                     </div>
 
-                    <div className="toggle-switch">
+                    <div data-tour="tax-ytd-toggle" className="toggle-switch">
                         <input
                             type="checkbox"
                             id="ytd"
@@ -5584,7 +5687,7 @@
                         <label htmlFor="ytd">YTD Only</label>
                     </div>
 
-                    <div className="year-filter">
+                    <div data-tour="tax-open-closed" className="year-filter">
                         {['all', 'open', 'closed'].map(status => (
                             <button
                                 key={status}
@@ -5596,7 +5699,7 @@
                         ))}
                     </div>
 
-                    <div className="stats-row">
+                    <div data-tour="tax-summary" className="stats-row">
                         <div className="stat-card">
                             <div className="stat-label">Total Realized P/L</div>
                             <div className={`stat-value ${summaryData.totalRealizedPL >= 0 ? 'positive' : 'negative'}`}>
@@ -5994,7 +6097,7 @@
 
             return (
                 <div>
-                    <div className="stats-row">
+                    <div data-tour="cc-summary" className="stats-row">
                         <div className="stat-card">
                             <div className="stat-label">{yearFilter === 'all' ? 'Total' : yearFilter} Premium Harvested</div>
                             <div className="stat-value positive">
@@ -6004,7 +6107,7 @@
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                        <button className="button button-primary" onClick={handleOpenModal}>
+                        <button data-tour="add-cc-btn" className="button button-primary" onClick={handleOpenModal}>
                             + Add Income
                         </button>
                         <div style={{ display: 'flex', gap: '4px', marginLeft: '8px' }}>
@@ -6408,7 +6511,7 @@
             if (view === 'portfolio') return (
                 <div>
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                        <form data-tour="dp-search" onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', flex: 1 }}>
                             <input type="text" placeholder="Search any ticker..." value={searchTicker}
                                 onChange={e => setSearchTicker(e.target.value)} className="search-box" style={{ flex: 1, maxWidth: 'none' }} />
                             <button type="submit" className="button button-primary">{loading ? <Spinner /> : 'Search'}</button>
@@ -6441,7 +6544,7 @@
                                 </div>
                             ) : null;
                         })()}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                        <div data-tour="dp-portfolio-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                             {sortedTickers.map(item => (
                                 <div key={item.ticker} className="card" onClick={() => loadTickerDetail(item.ticker)}
                                     style={{ cursor: 'pointer', transition: 'border-color 0.2s', borderColor: 'transparent' }}
@@ -6977,7 +7080,7 @@
             return (
                 <div>
                     {/* View Toggle */}
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                    <div data-tour="resale-views" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                         {[{key:'collection',label:'My Collection'},{key:'eddies',label:"Resale Tracker"},{key:'all',label:'All Items'}].map(v => (
                             <button key={v.key} onClick={() => setMainView(v.key)} style={{
                                 padding: '8px 18px', fontSize: '13px', borderRadius: '6px', cursor: 'pointer', fontWeight: mainView === v.key ? 700 : 400,
@@ -7131,7 +7234,7 @@
                             </div>
 
                             {/* ── Sales Ledger Section ── */}
-                            <div onClick={() => setSalesLedgerOpen(!salesLedgerOpen)} style={{ cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)', marginBottom: salesLedgerOpen ? '12px' : '16px', userSelect: 'none' }}>
+                            <div data-tour="resale-sales" onClick={() => setSalesLedgerOpen(!salesLedgerOpen)} style={{ cursor: 'pointer', fontSize: '12px', color: 'var(--text-muted)', marginBottom: salesLedgerOpen ? '12px' : '16px', userSelect: 'none' }}>
                                 {salesLedgerOpen ? '▾' : '▸'} <span style={{ fontFamily: 'Oswald', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '13px', color: 'var(--text-primary)' }}>Sales Ledger</span>
                                 <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: '8px' }}>— {formatCurrency(ytdNet)} net across {completedSales.length} completed</span>
                             </div>
@@ -8077,7 +8180,7 @@
                         ))}
                     </select>
                 </div>
-                <div className="card">
+                <div data-tour="crypto-positions" className="card">
                     <div className="table-container">
                         <table>
                             <thead>
@@ -8207,7 +8310,7 @@
                     {open && (<>
 
                     {/* ── Section 2A: ETF Flows ── */}
-                    <div style={{ marginBottom: '20px' }}>
+                    <div data-tour="etf-flows-section" style={{ marginBottom: '20px' }}>
                         <div style={{ fontFamily: 'Oswald', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '12px' }}>ETH ETF Flows</div>
 
                         {/* 5 stat cards */}
@@ -8306,7 +8409,7 @@
 
                     {/* ── Section 2B: BMNR NAV Premium/Discount ── */}
                     {bmnrNav && !bmnrNav.error && (
-                        <div style={{ marginBottom: '20px' }}>
+                        <div data-tour="bmnr-nav" style={{ marginBottom: '20px' }}>
                             <div style={{ fontFamily: 'Oswald', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', marginBottom: '12px' }}>BMNR NAV Premium / Discount</div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '14px' }}>
