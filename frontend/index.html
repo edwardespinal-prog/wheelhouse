@@ -962,9 +962,10 @@
             const [showThemeBuilder, setShowThemeBuilder] = useState(false);
             const [showDemoConfirm, setShowDemoConfirm] = useState(false);
             const [showSettings, setShowSettings] = useState(false);
-            const [showTour, setShowTour] = useState(false);
             const [tourStep, setTourStep] = useState(0);
             const [activeTour, setActiveTour] = useState(null); // {steps, name, lsKey}
+            const startMainTour = () => { setTourStep(0); setActiveTour({ steps: TOUR_STEPS, name: 'main', lsKey: 'wh_tour_completed' }); };
+            const startTabTour = (tourKey) => { if (TAB_TOURS[tourKey]) { setTourStep(0); setActiveTour({ steps: TAB_TOURS[tourKey], name: tourKey, lsKey: `wh_tour_${tourKey}_completed` }); } };
             const [customThemes, setCustomThemes] = useState(() => {
                 try { return JSON.parse(localStorage.getItem('wheelhouse_custom_themes') || '[]'); } catch { return []; }
             });
@@ -1055,8 +1056,8 @@
 
             // Auto-launch main tour on first visit (desktop only)
             useEffect(() => {
-                if (!loading && !showOnboarding && !localStorage.getItem('wh_tour_completed') && window.innerWidth >= 768) {
-                    const timer = setTimeout(() => { setTourStep(0); setShowTour(true); }, 1500);
+                if (!loading && !showOnboarding && !activeTour && !localStorage.getItem('wh_tour_completed') && window.innerWidth >= 768) {
+                    const timer = setTimeout(() => startMainTour(), 1500);
                     return () => clearTimeout(timer);
                 }
             }, [loading, showOnboarding]);
@@ -1065,27 +1066,26 @@
             const TAB_TOUR_KEYS = { equities: 'equities', options: 'options', "wheeler's": 'wheelers', 'tax-ledger': 'taxLedger', watchlist: 'watchlist', 'cc-income': 'ccIncome', 'dark-pool-&-insiders': 'darkPool', crypto: 'crypto', news: 'news', "uncle-eddi3's": 'resaleTracker', 'cash-flow': 'cashFlow' };
             const TAB_TOUR_KEYS_ALL = { dashboard: 'dashboard', ...TAB_TOUR_KEYS }; // includes dashboard for manual re-launch
             useEffect(() => {
+                if (activeTour) return; // don't trigger if any tour is running
                 const tourKey = TAB_TOUR_KEYS[currentTab]; // dashboard excluded from auto-trigger
                 if (!tourKey || !TAB_TOURS[tourKey]) return;
                 const mainDone = localStorage.getItem('wh_tour_completed') === 'true';
                 const tabDone = localStorage.getItem(`wh_tour_${tourKey}_completed`) === 'true';
-                if (mainDone && !tabDone && !showTour && !activeTour && window.innerWidth >= 768) {
+                if (mainDone && !tabDone && window.innerWidth >= 768) {
                     // Poll for target elements before launching (async content like Dark Pool)
                     let attempts = 0;
                     const maxAttempts = 10;
                     const poll = setInterval(() => {
                         attempts++;
-                        const steps = TAB_TOURS[tourKey];
-                        const firstTarget = document.querySelector(steps[0].target);
+                        const firstTarget = document.querySelector(TAB_TOURS[tourKey][0].target);
                         if (firstTarget || attempts >= maxAttempts) {
                             clearInterval(poll);
-                            setTourStep(0);
-                            setActiveTour({ steps, name: tourKey, lsKey: `wh_tour_${tourKey}_completed` });
+                            startTabTour(tourKey);
                         }
                     }, 500);
                     return () => clearInterval(poll);
                 }
-            }, [currentTab, showTour, activeTour]);
+            }, [currentTab, activeTour]);
 
             // Auto-refresh every 5 minutes
             useEffect(() => {
@@ -1218,12 +1218,7 @@
                     {error && <ErrorDisplay message={error} onClose={() => setError(null)} />}
                     {success && <SuccessDisplay message={success} onClose={() => setSuccess(null)} />}
 
-                    {/* Guided Tour — main */}
-                    {showTour && <TourOverlay steps={TOUR_STEPS} currentStep={tourStep}
-                        onNext={() => { if (tourStep >= TOUR_STEPS.length - 1) { localStorage.setItem('wh_tour_completed', 'true'); setShowTour(false); } else { setTourStep(tourStep + 1); } }}
-                        onBack={() => setTourStep(Math.max(0, tourStep - 1))}
-                        onSkip={() => { localStorage.setItem('wh_tour_completed', 'true'); setShowTour(false); }} />}
-                    {/* Guided Tour — tab */}
+                    {/* Guided Tour (unified — main + tab tours both use activeTour) */}
                     {activeTour && <TourOverlay steps={activeTour.steps} currentStep={tourStep}
                         onNext={() => { if (tourStep >= activeTour.steps.length - 1) { localStorage.setItem(activeTour.lsKey, 'true'); setActiveTour(null); setTourStep(0); } else { setTourStep(tourStep + 1); } }}
                         onBack={() => setTourStep(Math.max(0, tourStep - 1))}
@@ -1280,11 +1275,11 @@
                                             </div>
                                             <div style={{ borderTop:'1px solid var(--border)', paddingTop:'16px' }}>
                                                 <div style={{ display:'flex', gap:'8px' }}>
-                                                    <button onClick={() => { localStorage.removeItem('wh_tour_completed'); setShowSettings(false); setTourStep(0); setShowTour(true); }}
+                                                    <button onClick={() => { localStorage.removeItem('wh_tour_completed'); setShowSettings(false); startMainTour(); }}
                                                         style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 12px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px' }}>
                                                         Full Tour
                                                     </button>
-                                                    <button onClick={() => { const tk = TAB_TOUR_KEYS_ALL[currentTab]; if (tk && TAB_TOURS[tk]) { setShowSettings(false); setTourStep(0); setActiveTour({ steps: TAB_TOURS[tk], name: tk, lsKey: `wh_tour_${tk}_completed` }); } }}
+                                                    <button onClick={() => { const tk = TAB_TOUR_KEYS_ALL[currentTab]; if (tk) { setShowSettings(false); startTabTour(tk); } }}
                                                         style={{ flex:1, background:'none', border:'1px solid var(--border)', borderRadius:'6px', padding:'8px 12px', color:'var(--text-muted)', cursor:'pointer', fontSize:'12px' }}>
                                                         Tour This Tab
                                                     </button>
@@ -1717,11 +1712,11 @@
                                         </button>
                                         {tourMenuOpen && (
                                             <div style={{ position:'absolute', top:'100%', right:0, marginTop:'4px', background:'var(--bg-primary)', border:'1px solid var(--border)', borderRadius:'6px', boxShadow:'0 8px 24px rgba(0,0,0,0.4)', zIndex:100, minWidth:'160px', overflow:'hidden' }}>
-                                                <button onClick={() => { setTourMenuOpen(false); setTourStep(0); setShowTour(true); }}
+                                                <button onClick={() => { setTourMenuOpen(false); startMainTour(); }}
                                                     style={{ display:'block', width:'100%', padding:'8px 14px', background:'none', border:'none', borderBottom:'1px solid var(--border)', color:'var(--text-primary)', cursor:'pointer', fontSize:'12px', textAlign:'left' }}>
                                                     Full Tour (12 steps)
                                                 </button>
-                                                <button onClick={() => { setTourMenuOpen(false); const tk = TAB_TOUR_KEYS_ALL[currentTab]; if (tk && TAB_TOURS[tk]) { setTourStep(0); setActiveTour({ steps: TAB_TOURS[tk], name: tk, lsKey: `wh_tour_${tk}_completed` }); } }}
+                                                <button onClick={() => { setTourMenuOpen(false); const tk = TAB_TOUR_KEYS_ALL[currentTab]; if (tk) startTabTour(tk); }}
                                                     style={{ display:'block', width:'100%', padding:'8px 14px', background:'none', border:'none', color:'var(--text-primary)', cursor:'pointer', fontSize:'12px', textAlign:'left' }}>
                                                     Tour This Tab
                                                 </button>
@@ -1875,7 +1870,7 @@
                 { target: '[data-tour="wheel-simulator"]', title: 'Scenario Simulator', description: 'Project multi-cycle wheel returns over 3, 6, or 12 months. See best case, expected, and worst case outcomes with assignment probability.', position: 'top' },
             ],
             taxLedger: [
-                { target: '[data-tour="tax-ytd-toggle"]', title: 'YTD Filter', description: 'Filter to current year realized gains only. Your estimated tax reserve auto-calculates based on short-term and long-term rates.', position: 'bottom' },
+                { target: '[data-tour="tax-rate-setting"]', title: 'Adjustable Tax Rate', description: 'Set your short-term and long-term capital gains tax rates. The tax reserve and estimated liability update instantly across the dashboard and tax ledger.', position: 'bottom' },
                 { target: '[data-tour="tax-open-closed"]', title: 'Open vs Closed', description: 'Switch between open positions (unrealized) and closed trades (realized P/L). Closed trades show date sold and proceeds.', position: 'bottom' },
                 { target: '[data-tour="tax-summary"]', title: 'Tax Summary', description: 'Realized P/L, tax reserve, and short-term vs long-term breakdown at a glance.', position: 'bottom' },
             ],
@@ -1906,7 +1901,8 @@
             ],
             cashFlow: [
                 { target: '[data-tour="cashflow-add"]', title: 'Log Cash Flows', description: 'Record deposits, withdrawals, and transfers. Cash balance updates automatically with every trade and CC premium.', position: 'bottom' },
-                { target: '[data-tour="cashflow-ledger"]', title: 'Cash Flow Ledger', description: 'Full history of cash movements — deposits, withdrawals, premiums collected, and trade proceeds.', position: 'top' },
+                { target: '[data-tour="cashflow-summary"]', title: 'Cash Flow Summary', description: 'Capital Deployed, Capital Received, and Net Cash Flow — see exactly how much you\'ve put in vs taken out of your portfolio.', position: 'bottom' },
+                { target: '[data-tour="cashflow-chart"]', title: 'Cash Flow Over Time', description: 'Toggle between 1W, 1M, 3M, 6M, and Max to see your cumulative deposits and withdrawals over any time period.', position: 'top' },
             ],
         };
 
@@ -5705,7 +5701,7 @@
             return (
                 <div>
                     {/* Tax Rate Setting */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', padding: '14px 18px', background: 'rgba(241,90,34,0.08)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                    <div data-tour="tax-rate-setting" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', padding: '14px 18px', background: 'rgba(241,90,34,0.08)', border: '1px solid var(--border)', borderRadius: '8px' }}>
                         <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Combined Tax Rate (Fed + NJ)</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <input
@@ -7970,7 +7966,7 @@
 
             return (
                 <div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                    <div data-tour="cashflow-summary" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                         <div className="stat-card">
                             <div className="stat-label">Capital Deployed ({chartRange === 'max' ? 'All Time' : chartRange <= 7 ? '1W' : chartRange <= 30 ? '1M' : chartRange <= 90 ? '3M' : '6M'})</div>
                             <div className="stat-value" style={{color: 'var(--accent)'}}>{fmt(filteredTotals.total_deployed)}</div>
@@ -7989,7 +7985,7 @@
                         </div>
                     </div>
 
-                    <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
+                    <div data-tour="cashflow-chart" className="card" style={{ marginBottom: '24px', padding: '20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                             <h3 style={{ fontFamily: 'Oswald', fontSize: '16px', color: 'var(--accent)' }}>Cumulative Cash Flow</h3>
                             <div style={{ display: 'flex', gap: '4px' }}>
